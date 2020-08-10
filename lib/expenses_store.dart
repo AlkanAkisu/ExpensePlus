@@ -1,10 +1,15 @@
 import 'package:mobx/mobx.dart';
+import 'package:tracker_but_fast/database/expense_provider.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 import 'package:tracker_but_fast/models/expense.dart';
 
 part 'expenses_store.g.dart';
 
-class MobxStore = MobxStoreBase with _$MobxStore;
+class MobxStore extends MobxStoreBase with _$MobxStore {
+  static final MobxStore st = MobxStore._();
+
+  MobxStore._();
+}
 
 abstract class MobxStoreBase with Store {
   @observable
@@ -31,6 +36,7 @@ abstract class MobxStoreBase with Store {
     inputExpenses.forEach((expense) {
       if (isSelectedDate(expense)) selectedDateExpenses.add(expense);
     });
+    print('STORE:\t expenses added $expenses');
   }
 
   @action
@@ -53,7 +59,13 @@ abstract class MobxStoreBase with Store {
       if (e.id == expense.id) return expense;
       return e;
     }).toList();
-    updateSelectedDate(selectedDate);
+
+    selectedDateExpenses = selectedDateExpenses.map((e) {
+      updateSelectedDate(selectedDate);
+      if (e.id == expense.id) return expense;
+      return e;
+    }).toList();
+
     print('STORE:\texpense updated ${expense.name}');
   }
 
@@ -63,29 +75,32 @@ abstract class MobxStoreBase with Store {
     selectedDateExpenses = expenses?.where(isSelectedDate)?.toList();
     selectedDateExpenses ??= [];
     print(
-        'STORE:\tselectedDateUpdated. selectedDateExpenses ==> $selectedDateExpenses');
+        'STORE:\tselectedDateUpdated. selectedDateExpenses ==> ${selectedDateExpenses.map((e) => e.name).join(' ')}');
   }
 
   //TAGS
   @action
   void addTag(Tag newTag) {
-    if (searchTag(newTag) != null) {
-      newTag.id = searchTag(newTag).id;
+    var foundTag = searchTag(newTag);
+    if (foundTag != null) {
+      newTag.id = foundTag.id;
       updateTag(newTag);
     } else {
       tags.add(newTag);
     }
-    //TODO debug it
-    // for (var expense in expenses) {
-    //   var tags = expense.tags;
-    //   expense.tags = tags.map((e) {
-    //     if (e.name == newTag.name || e.shorten == newTag.shorten) {
-    //       return newTag;
-    //     }
-    //     return e;
-    //   }).toList();
-    //   updateExpense(expense);
-    // }
+
+    for (var expense in expenses) {
+      var tags = expense.tags;
+      expense.tags = tags.map((tag) {
+        if (tag.name == newTag.name) return newTag;
+        return tag;
+      }).toList();
+      if (expense.tags.any((tag) => tag.name == newTag.name)) {
+        updateExpense(expense);
+        // ExpenseProvider.db.update(expense);
+      }
+    }
+
     print('STORE:\ttag added ${newTag.name}');
   }
 
@@ -125,8 +140,7 @@ abstract class MobxStoreBase with Store {
         })
         .toList()
         .asMap()[0];
-
-    print('STORE:\found tag ${oldTag?.name}');
+    if (oldTag?.name != null) print('STORE:\tfound tag ${oldTag?.name}');
     return oldTag;
   }
 

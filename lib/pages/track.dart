@@ -1,16 +1,17 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
-import 'package:tracker_but_fast/database/expense_provider.dart';
-import 'package:tracker_but_fast/database/tag_provider.dart';
-import 'package:tracker_but_fast/models/tag.dart';
-import 'package:tracker_but_fast/utilities/dummy_data.dart';
-import 'package:tracker_but_fast/utilities/regex.dart';
-import 'package:tracker_but_fast/models/expense.dart';
-import 'package:tracker_but_fast/expenses_store.dart';
-import 'package:tracker_but_fast/widgets/expenseTile.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:tracker_but_fast/database/expense_provider.dart';
+import 'package:tracker_but_fast/database/tag_provider.dart';
+import 'package:tracker_but_fast/expenses_store.dart';
+import 'package:tracker_but_fast/models/expense.dart';
+import 'package:tracker_but_fast/utilities/dummy_data.dart';
+import 'package:tracker_but_fast/utilities/regex.dart';
+import 'package:tracker_but_fast/widgets/expenseTile.dart';
 
 class TrackPage extends StatefulWidget {
   @override
@@ -25,7 +26,7 @@ class _TrackPageState extends State<TrackPage> {
   Set<Expense> editing = <Expense>{};
   var focusNode = new FocusNode();
   GlobalKey<AnimatedListState> listKey;
-  final store = MobxStore();
+  final store = MobxStore.st;
   DateTime now;
   DateTime selectedDate;
   double calendarHeight;
@@ -46,6 +47,7 @@ class _TrackPageState extends State<TrackPage> {
   @override
   void initState() {
     super.initState();
+    print('INIT\t');
     this.listKey = widget.listKey;
     now = DateTime.now();
     selectedDate = DateTime(now.year, now.month, now.day);
@@ -55,35 +57,30 @@ class _TrackPageState extends State<TrackPage> {
     calendarHeight = 0;
 
     KeyboardVisibility.onChange.listen((bool visible) {
-      if (!visible)
+      if (this.mounted && !visible && showThumbnail)
         setState(() {
           //TODO text memory do controller.text = oldtext when click back
           showThumbnail = false;
           store.thumbnailExpense = null;
           FocusScope.of(focusNode.context).unfocus();
         });
-      else
-        setState(() {
-          showThumbnail = true;
-        });
     });
-
-    ExpenseProvider.db.getAllExpenses().then((expenses) {
-      TagProvider.db.getAllTags().then((tags) {
+    if (store.expenses.isEmpty)
+      ExpenseProvider.db.getAllExpenses().then((expenses) {
         if (expenses.isEmpty) {
           print('Database value ==> is empty');
         } else {
-          print('Database value:  expenses ==> $expenses tags ==> $tags');
-
           store.addAllExpenses(expenses);
-          store.addAllTags(tags);
-
-          print('store tags => ${store.tags}');
-
           setState(() {});
         }
       });
-    });
+
+    if (store.tags.isEmpty)
+      TagProvider.db.getAllTags().then((tags) {
+        store.addAllTags(tags);
+
+        // print('store tags => ${store.tags}');
+      });
   }
 
   @override

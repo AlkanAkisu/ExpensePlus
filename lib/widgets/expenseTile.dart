@@ -23,7 +23,7 @@ class ExpenseTile extends StatefulWidget {
 }
 
 class _ExpenseTileState extends State<ExpenseTile> {
-  final store = MobxStore();
+
   @override
   Widget build(BuildContext context) {
     return expenseTile(widget.expense);
@@ -103,6 +103,14 @@ class _ExpenseTileState extends State<ExpenseTile> {
   }
 
   Widget tagRow(Expense expense) {
+    if (expense.tags == null) {
+      expense.tags = [
+        new Tag(
+          name: 'other',
+          hexCode: 0xff9e9e9e,
+        )
+      ];
+    }
     return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -136,6 +144,9 @@ class _ExpenseTileState extends State<ExpenseTile> {
   }
 
   Widget priceSection(Expense expense) {
+    if (expense.prices == null) {
+      expense.prices = [0];
+    }
     double totalPrice =
         expense?.prices?.reduce((value, element) => value + element) ?? 0;
 

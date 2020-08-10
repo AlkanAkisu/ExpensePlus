@@ -65,12 +65,12 @@ class Regex {
       ];
     for (final el in tagRegex.allMatches(str)) {
       Tag tag = await TagProvider.db.searchTag(el[0]);
-      print('REGEX:\t database tag $tag ');
+      // print('REGEX:\t database tag $tag ');
       tag ??= new Tag(
         name: el[0],
       );
       tags.add(tag);
-      print('REGEX:\t tags list $tag ');
+      // print('REGEX:\t tags list $tag ');
     }
 
     str = str.replaceAll(tagRegex, '');
@@ -96,7 +96,7 @@ class Regex {
         };
 
         date = dateFormatter(map);
-        print('How Many:$howMany\t Keyword:$keyword\t Date:$date');
+        // print('How Many:$howMany\t Keyword:$keyword\t Date:$date');
       }
     });
     date ??= selectedDate;

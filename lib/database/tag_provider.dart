@@ -107,7 +107,7 @@ class TagProvider {
 
   Future<Tag> searchTag(String str) async {
     final tags = await getAllTags();
-    print('DATABASE:\t tags = $tags\t str = $str');
+    // print('DATABASE:\t tags = $tags\t str = $str');
     if (tags == null) return null;
     return tags
         .where(

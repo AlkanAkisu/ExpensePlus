@@ -3,8 +3,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 import 'package:tracker_but_fast/models/expense.dart';
+import 'package:tracker_but_fast/models/tag.dart';
 
 class ExpenseProvider {
+  var needsUpdate = false;
+
   static Database _database;
   static final ExpenseProvider db = ExpenseProvider._();
 
@@ -45,6 +48,22 @@ class ExpenseProvider {
         .record(newExpense.id)
         .update(await database, newExpense.toJson());
     print('DATABASE:\texpense updated ');
+  }
+
+  Future updateTags(Tag tag) async {
+    var records = await _expenseStore.find(await database);
+
+    for (var record in records) {
+      var exp = Expense.fromJson(record.value);
+      exp.tags = exp.tags.map((e) {
+        if (tag.name == tag.name) {
+          needsUpdate = true;
+          return tag;
+        }
+        return tag;
+      }).toList();
+      update(exp);
+    }
   }
 
   Future delete(Expense newExpense) async {

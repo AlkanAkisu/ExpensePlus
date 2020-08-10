@@ -12,7 +12,7 @@ class Settings extends HookWidget {
   ValueNotifier<String> buttonName;
   TextEditingController nameController = new TextEditingController();
   TextEditingController shortenController = new TextEditingController();
-  final store = MobxStore();
+  final store = MobxStore.st;
   FocusNode focusNode;
 
   @override
@@ -52,7 +52,7 @@ class Settings extends HookWidget {
           iconSize: 36,
           onPressed: () async {
             await ExpenseProvider.db.deleteAll();
-            MobxStore().deleteAll();
+            MobxStore.st.deleteAll();
           },
         ),
       ),
@@ -74,7 +74,7 @@ class Settings extends HookWidget {
           color: Colors.red,
           iconSize: 36,
           onPressed: () {
-            MobxStore().deleteAll();
+            MobxStore.st.deleteAll();
           },
         ),
       ),
@@ -95,7 +95,6 @@ class Settings extends HookWidget {
                   hintText: 'Tag Name (e.g. travel)',
                   floatingLabelBehavior: FloatingLabelBehavior.auto),
               onChanged: (str) {
-                print('editing completed $str');
                 buttonName.value = str;
                 focusNode.requestFocus();
               },
@@ -129,6 +128,7 @@ class Settings extends HookWidget {
                           onColorChanged: (color) {
                             currentColor.value = color;
                             Navigator.pop(context);
+                            FocusScope.of(context).unfocus();
                           },
                           enableLabel: true,
                         ),
@@ -152,21 +152,28 @@ class Settings extends HookWidget {
               Icons.send,
             ),
             iconSize: 36,
-            onPressed: () async {
-              Tag tag = await TagProvider.db.createTag(
-                nameController.text,
-                shortenController.text,
-                currentColor.value.value,
-              );
-              nameController.text = '';
-              shortenController.text = '';
-              FocusScope.of(context).unfocus();
-              store.addTag(tag);
-              print('submitted');
-            },
+            onPressed: () async => addTagButtonPressed(),
           ),
         ],
       ),
     );
+  }
+
+  //LOGIC
+
+  Future addTagButtonPressed() async {
+    Tag tag = await TagProvider.db.createTag(
+      nameController.text,
+      shortenController.text,
+      currentColor.value.value,
+    );
+
+    nameController.text = '';
+    shortenController.text = '';
+    FocusScope.of(context).unfocus();
+
+    //DB and STORE
+    MobxStore.st.addTag(tag);
+    //await ExpenseProvider.db.updateTags(tag);
   }
 }
