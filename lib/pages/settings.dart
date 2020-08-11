@@ -137,7 +137,11 @@ class Settings extends HookWidget {
                   },
                 );
               },
-              child: Text(buttonName.value),
+              child: Text(
+                buttonName.value.isEmpty
+                    ? 'Change Tag Color'
+                    : buttonName.value,
+              ),
               color: currentColor.value,
               textColor: useWhiteForeground(currentColor.value)
                   ? const Color(0xffffffff)
@@ -162,6 +166,7 @@ class Settings extends HookWidget {
   //LOGIC
 
   Future addTagButtonPressed() async {
+    if (nameController.text == null) return;
     Tag tag = await TagProvider.db.createTag(
       nameController.text,
       shortenController.text,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 import 'package:tracker_but_fast/models/expense.dart';
 import 'package:tracker_but_fast/database/tag_provider.dart';
@@ -59,16 +60,17 @@ class Regex {
     });
     str = str.replaceAll(priceRegex, '');
 
-    if (tagRegex.allMatches(str).isEmpty)
-      tags = [
-        Tag.other()
-      ];
+    if (tagRegex.allMatches(str).isEmpty) tags = [Tag.other()];
     for (final el in tagRegex.allMatches(str)) {
       Tag tag = await TagProvider.db.searchTag(el[0]);
-      // print('REGEX:\t database tag $tag ');
-      tag ??= new Tag(
-        name: el[0],
-      );
+
+      if (tag == null) {
+        tag = new Tag(
+          name: el[0],
+        );
+        await TagProvider.db.addTag(tag);
+        MobxStore.st.addTag(tag);
+      }
       tags.add(tag);
       // print('REGEX:\t tags list $tag ');
     }

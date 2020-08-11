@@ -156,6 +156,17 @@ mixin _$MobxStore on MobxStoreBase, Store {
   }
 
   @override
+  double getSelectedDateTotalPrice([DateTime inputSelectedDate]) {
+    final _$actionInfo = _$MobxStoreBaseActionController.startAction(
+        name: 'MobxStoreBase.getSelectedDateTotalPrice');
+    try {
+      return super.getSelectedDateTotalPrice(inputSelectedDate);
+    } finally {
+      _$MobxStoreBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void addTag(Tag newTag) {
     final _$actionInfo = _$MobxStoreBaseActionController.startAction(
         name: 'MobxStoreBase.addTag');

@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,7 +35,7 @@ class _TrackPageState extends State<TrackPage> {
   List<Expense> selectedDateExpenses;
 
   Expense thumbnailExpense;
-  bool showThumbnail = false;
+  bool showThumbnail = false, isKeyboardActive = false, hideTotalPrice = false;
 
   @override
   void dispose() {
@@ -57,14 +58,22 @@ class _TrackPageState extends State<TrackPage> {
     calendarHeight = 0;
 
     KeyboardVisibility.onChange.listen((bool visible) {
+      isKeyboardActive = visible;
+      print('KEYBOARD\t visible:$visible calendar:${calendarHeight > 0}');
+      if (this.mounted && visible && calendarHeight > 0)
+        setState(() {
+          calendarHeight = 0;
+        });
       if (this.mounted && !visible && showThumbnail)
         setState(() {
           //TODO text memory do controller.text = oldtext when click back
+          hideTotalPrice = false;
           showThumbnail = false;
           store.thumbnailExpense = null;
           FocusScope.of(focusNode.context).unfocus();
         });
     });
+
     if (store.expenses.isEmpty)
       ExpenseProvider.db.getAllExpenses().then((expenses) {
         if (expenses.isEmpty) {
@@ -94,6 +103,7 @@ class _TrackPageState extends State<TrackPage> {
             calendarShowSection(),
             calendar(),
             expensesListWidget(),
+            totalPriceWidget(),
             thumbnailWidget(),
             addPriceWidget(),
           ],
@@ -107,19 +117,23 @@ class _TrackPageState extends State<TrackPage> {
     return Container(
       height: calendarHeight,
       child: SingleChildScrollView(
-        child: TableCalendar(
-          calendarController: _calendarController,
-          startingDayOfWeek: StartingDayOfWeek.monday,
-          initialSelectedDay: selectedDate,
-          calendarStyle: CalendarStyle(),
-          rowHeight: 35,
-          onDaySelected: (day, events) {
-            FocusScope.of(focusNode.context).unfocus();
-            selectedDate = new DateTime(day.year, day.month, day.day);
-            store.updateSelectedDate(selectedDate);
-            listKey.currentState.setState(() {});
-            calendarHeight = 0;
-            setState(() {});
+        child: Observer(
+          builder: (_) {
+            return TableCalendar(
+              calendarController: _calendarController,
+              startingDayOfWeek: StartingDayOfWeek.monday,
+              initialSelectedDay: store.selectedDate,
+              calendarStyle: CalendarStyle(),
+              rowHeight: 35,
+              onDaySelected: (day, events) {
+                FocusScope.of(focusNode.context).unfocus();
+                selectedDate = new DateTime(day.year, day.month, day.day);
+                store.updateSelectedDate(selectedDate);
+                listKey.currentState.setState(() {});
+                calendarHeight = 0;
+                setState(() {});
+              },
+            );
           },
         ),
       ),
@@ -127,46 +141,83 @@ class _TrackPageState extends State<TrackPage> {
   }
 
   Widget calendarShowSection() {
-    return Container(
-        padding: const EdgeInsets.all(4.0),
-        margin: const EdgeInsets.only(top: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey[400],
-          border: Border.all(
-            color: Colors.black,
-            width: 3,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        height: 60,
-        width: double.infinity,
-        child: GestureDetector(
-          onTap: calendarButtonPressed,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(4.0),
-                  margin: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1.5,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: calendarHeight != 0
+              ? null
+              : () {
+                  store.updateSelectedDate(store.selectedDate.subtract(
+                    Duration(
+                      days: 1,
                     ),
-                  ),
+                  ));
+                },
+        ),
+        Expanded(
+          child: Container(
+              padding: const EdgeInsets.all(4.0),
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                border: Border.all(
+                  color: Colors.black,
+                  width: 3,
                 ),
+                borderRadius: BorderRadius.circular(12),
               ),
-              IconButton(
-                icon: Icon(Icons.arrow_drop_down),
-                onPressed: calendarButtonPressed,
-              )
-            ],
-          ),
-        ));
+              height: 60,
+              child: GestureDetector(
+                onTap: calendarButtonPressed,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Expanded(
+                      child: Observer(builder: (_) {
+                        var date = store.selectedDate;
+                        return Container(
+                          padding: const EdgeInsets.all(4.0),
+                          margin: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '${date.day}/${date.month}/${date.year}',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        calendarHeight == 0
+                            ? Icons.arrow_drop_down
+                            : Icons.arrow_drop_up,
+                      ),
+                      onPressed: () async => calendarButtonPressed(),
+                    )
+                  ],
+                ),
+              )),
+        ),
+        IconButton(
+          icon: Icon(Icons.arrow_forward),
+          onPressed: calendarHeight != 0
+              ? null
+              : () {
+                  store.updateSelectedDate(store.selectedDate.add(
+                    Duration(
+                      days: 1,
+                    ),
+                  ));
+                },
+        ),
+      ],
+    );
   }
 
   //---------------EXPENSES LIST WIDGET---------------
@@ -188,7 +239,7 @@ class _TrackPageState extends State<TrackPage> {
 
   Widget listViewExpenses() {
     return Observer(builder: (_) {
-      DateTime selectedDate = store.selectedDate;
+      store.selectedDate;
       List<Expense> selectedDateExpenses = store.selectedDateExpenses;
 
       //setState(() {});
@@ -269,6 +320,40 @@ class _TrackPageState extends State<TrackPage> {
     );
   }
 
+  Widget totalPriceWidget() {
+    return Observer(builder: (_) {
+      store.selectedDate; //t update when change date
+      var totalPrice = store.getSelectedDateTotalPrice();
+
+      return Container(
+        padding: const EdgeInsets.all(4.0),
+        margin: const EdgeInsets.only(bottom: 5),
+        decoration: BoxDecoration(
+          color: Colors.grey[400],
+          border: Border.all(
+            color: Colors.black,
+            width: 3,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        height: hideTotalPrice ? 0 : 60,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'Total Expense: $totalPrice',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.2
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
   //---------------ADD PRICE TEXT FIELD---------------
   Widget addPriceWidget() {
     controller = TextEditingController();
@@ -292,7 +377,13 @@ class _TrackPageState extends State<TrackPage> {
               await Regex.doRegex(text, store.selectedDate),
             );
           },
-          onTap: () {
+          onTap: () async {
+            hideTotalPrice = true;
+            if (calendarHeight == null)
+              setState(() {
+                calendarHeight = 0;
+              });
+
             if (!showThumbnail) {
               showThumbnail = true;
               setState(() {});
@@ -319,10 +410,15 @@ class _TrackPageState extends State<TrackPage> {
     );
   }
 
+  //
   //--------------LOGIC--------------
+  //
 
   void textFieldSubmitted(TextEditingController controller) async {
-    Expense regexExpense = await Regex.doRegex(controller.text, selectedDate);
+    Expense regexExpense = await Regex.doRegex(
+      controller.text,
+      store.selectedDate,
+    );
     print('regexExpense:\t $regexExpense');
     showThumbnail = false;
     store.thumbnailExpense = null;
@@ -348,6 +444,7 @@ class _TrackPageState extends State<TrackPage> {
         listKey.currentState.insertItem(store.selectedDateExpenses.length - 1);
     }
     showThumbnail = false;
+    hideTotalPrice = false;
     setState(() {});
   }
 
@@ -408,7 +505,13 @@ class _TrackPageState extends State<TrackPage> {
     // print('Controller text : ${controller.text}');
   }
 
-  void calendarButtonPressed() {
+  Future calendarButtonPressed() async {
+    FocusScope.of(context).unfocus();
+    await Future.doWhile(() async {
+      await Future.delayed(Duration(milliseconds: 200));
+      return isKeyboardActive;
+    });
+
     if (calendarHeight != null)
       calendarHeight = null;
     else
@@ -417,8 +520,8 @@ class _TrackPageState extends State<TrackPage> {
   }
 
   bool isSelectedDate(Expense exp) {
-    return exp.date.year == selectedDate.year &&
-        exp.date.month == selectedDate.month &&
-        exp.date.day == selectedDate.day;
+    return exp.date.year == store.selectedDate.year &&
+        exp.date.month == store.selectedDate.month &&
+        exp.date.day == store.selectedDate.day;
   }
 }

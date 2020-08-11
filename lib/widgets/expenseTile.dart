@@ -23,7 +23,6 @@ class ExpenseTile extends StatefulWidget {
 }
 
 class _ExpenseTileState extends State<ExpenseTile> {
-
   @override
   Widget build(BuildContext context) {
     return expenseTile(widget.expense);
@@ -147,8 +146,7 @@ class _ExpenseTileState extends State<ExpenseTile> {
     if (expense.prices == null) {
       expense.prices = [0];
     }
-    double totalPrice =
-        expense?.prices?.reduce((value, element) => value + element) ?? 0;
+    double totalPrice = expense?.getTotalExpense() ?? 0;
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),

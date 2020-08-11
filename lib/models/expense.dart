@@ -18,27 +18,8 @@ class Expense {
     this.limit,
     this.date,
   }) {
+    prices = prices == null ? [0] : prices.isEmpty ? [0] : prices;
     date ??= DateTime.now();
-  }
-
-  factory Expense.fromJson(Map<String, dynamic> json) {
-    List<Tag> tags = List();
-    json["tags"].forEach((element) {
-      tags.add(Tag.fromJson(element));
-    });
-    List<double> prices = List();
-    json["prices"]?.forEach((element) {
-      prices.add(element);
-    });
-    return Expense(
-      id: json["id"],
-      text: json["text"],
-      name: json["name"],
-      tags: tags,
-      prices: prices,
-      limit: json["limit"],
-      date: json["date"] != null ? DateTime.parse(json["date"]) : null,
-    );
   }
 
   static Expense empty() {
@@ -52,6 +33,30 @@ class Expense {
         )
       ],
       limit: true,
+    );
+  }
+
+  double getTotalExpense() =>
+      prices.reduce((value, element) => value + element);
+
+  factory Expense.fromJson(Map<String, dynamic> json) {
+    List<Tag> tags = List();
+    json["tags"].forEach((element) {
+      tags.add(Tag.fromJson(element));
+    });
+    List<double> prices = List();
+    json["prices"]?.forEach((element) {
+      prices.add(element);
+    });
+    prices = prices.isEmpty || prices == null ? [0] : prices;
+    return Expense(
+      id: json["id"],
+      text: json["text"],
+      name: json["name"],
+      tags: tags,
+      prices: prices,
+      limit: json["limit"],
+      date: json["date"] != null ? DateTime.parse(json["date"]) : null,
     );
   }
 

@@ -23,6 +23,10 @@ abstract class MobxStoreBase with Store {
   @observable
   Expense thumbnailExpense = new Expense();
 
+  //
+  //  EXPENSE SECTION
+  //
+
   @action
   void addExpense(Expense expense) {
     print('STORE:\t expense added ${expense.name}');
@@ -78,7 +82,21 @@ abstract class MobxStoreBase with Store {
         'STORE:\tselectedDateUpdated. selectedDateExpenses ==> ${selectedDateExpenses.map((e) => e.name).join(' ')}');
   }
 
-  //TAGS
+  @action
+  double getSelectedDateTotalPrice([DateTime inputSelectedDate]) {
+    return expenses.fold(0, (prev, expense) {
+      //todo add limit
+
+      if (isSelectedDate(expense, inputSelectedDate ?? selectedDate))
+        return prev + expense.getTotalExpense();
+      return prev;
+    });
+  }
+
+  //
+  //  TAGS SECTION
+  //
+
   @action
   void addTag(Tag newTag) {
     var foundTag = searchTag(newTag);
@@ -150,9 +168,10 @@ abstract class MobxStoreBase with Store {
   }
 
   //HELPER FUNCTIONS
-  bool isSelectedDate(Expense exp) {
-    return exp.date.year == selectedDate.year &&
-        exp.date.month == selectedDate.month &&
-        exp.date.day == selectedDate.day;
+  bool isSelectedDate(Expense exp, [DateTime dateInput]) {
+    dateInput ??= selectedDate;
+    return exp.date.year == dateInput.year &&
+        exp.date.month == dateInput.month &&
+        exp.date.day == dateInput.day;
   }
 }
