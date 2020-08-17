@@ -56,14 +56,14 @@ class Regex {
     str = str.trim();
 
     priceRegex.allMatches(str).forEach((el) {
-      prices.add(double.parse(el[0]));
+      prices.add(double.parse(double.parse(el[0]).toStringAsFixed(2)));
     });
     str = str.replaceAll(priceRegex, '');
 
     if (tagRegex.allMatches(str).isEmpty) tags = [Tag.other()];
     for (final el in tagRegex.allMatches(str)) {
-      Tag tag = await TagProvider.db.searchTag(el[0]);
-
+      Tag tag = MobxStore.st.getTagByName(el[0]);
+      
       if (tag == null) {
         tag = new Tag(
           name: el[0],

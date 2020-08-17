@@ -13,6 +13,7 @@ import 'package:tracker_but_fast/models/expense.dart';
 import 'package:tracker_but_fast/utilities/dummy_data.dart';
 import 'package:tracker_but_fast/utilities/regex.dart';
 import 'package:tracker_but_fast/widgets/expenseTile.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class TrackPage extends StatefulWidget {
   @override
@@ -48,24 +49,25 @@ class _TrackPageState extends State<TrackPage> {
   @override
   void initState() {
     super.initState();
-    print('INIT\t');
     this.listKey = widget.listKey;
     now = DateTime.now();
     selectedDate = DateTime(now.year, now.month, now.day);
-    store.updateSelectedDate(selectedDate);
+    if (store.selectedDate == null) store.updateSelectedDate(selectedDate);
 
     _calendarController = CalendarController();
     calendarHeight = 0;
 
     KeyboardVisibility.onChange.listen((bool visible) {
       isKeyboardActive = visible;
-      print('KEYBOARD\t visible:$visible calendar:${calendarHeight > 0}');
+
       if (this.mounted && visible && calendarHeight > 0)
         setState(() {
           calendarHeight = 0;
+          print('sestate1');
         });
       if (this.mounted && !visible && showThumbnail)
         setState(() {
+          print('sestate2');
           //TODO text memory do controller.text = oldtext when click back
           hideTotalPrice = false;
           showThumbnail = false;
@@ -74,20 +76,20 @@ class _TrackPageState extends State<TrackPage> {
         });
     });
 
-    if (store.expenses.isEmpty)
-      ExpenseProvider.db.getAllExpenses().then((expenses) {
-        if (expenses.isEmpty) {
-          print('Database value ==> is empty');
-        } else {
-          store.addAllExpenses(expenses);
-          setState(() {});
-        }
-      });
-
     if (store.tags.isEmpty)
       TagProvider.db.getAllTags().then((tags) {
         store.addAllTags(tags);
-
+        if (store.expenses.isEmpty)
+          ExpenseProvider.db.getAllExpenses().then((expenses) {
+            if (expenses.isEmpty) {
+              print('Database value ==> is empty');
+            } else {
+              store.addAllExpenses(expenses);
+              setState(() {
+                print('sestate3');
+              });
+            }
+          });
         // print('store tags => ${store.tags}');
       });
   }
@@ -96,17 +98,20 @@ class _TrackPageState extends State<TrackPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
-            calendarShowSection(),
-            calendar(),
-            expensesListWidget(),
-            totalPriceWidget(),
-            thumbnailWidget(),
-            addPriceWidget(),
-          ],
+        child: Container(
+          color: const Color(0xfff9f9f9),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              calendarShowSection(),
+              calendar(),
+              expensesListWidget(),
+              totalPriceWidget(),
+              thumbnailWidget(),
+              addPriceWidget(),
+            ],
+          ),
         ),
       ),
     );
@@ -124,14 +129,19 @@ class _TrackPageState extends State<TrackPage> {
               startingDayOfWeek: StartingDayOfWeek.monday,
               initialSelectedDay: store.selectedDate,
               calendarStyle: CalendarStyle(),
+              availableGestures: AvailableGestures.horizontalSwipe,
+              headerStyle: HeaderStyle(
+                formatButtonVisible: false,
+              ),
               rowHeight: 35,
               onDaySelected: (day, events) {
-                FocusScope.of(focusNode.context).unfocus();
+                // focusNode.unfocus();;
                 selectedDate = new DateTime(day.year, day.month, day.day);
                 store.updateSelectedDate(selectedDate);
-                listKey.currentState.setState(() {});
                 calendarHeight = 0;
-                setState(() {});
+                setState(() {
+                  print('sestate4');
+                });
               },
             );
           },
@@ -164,7 +174,7 @@ class _TrackPageState extends State<TrackPage> {
                 color: Colors.grey[400],
                 border: Border.all(
                   color: Colors.black,
-                  width: 3,
+                  width: 2,
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -225,14 +235,7 @@ class _TrackPageState extends State<TrackPage> {
     return Expanded(
         child: Container(
       margin: const EdgeInsets.symmetric(vertical: 5),
-      padding: const EdgeInsets.all(4.0),
-      decoration: BoxDecoration(
-          color: Colors.blue[400],
-          border: Border.all(
-            color: Colors.black,
-            width: 3,
-          ),
-          borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: listViewExpenses(),
     ));
   }
@@ -242,8 +245,6 @@ class _TrackPageState extends State<TrackPage> {
       store.selectedDate;
       List<Expense> selectedDateExpenses = store.selectedDateExpenses;
 
-      //setState(() {});
-
       return new AnimatedList(
         key: listKey,
         initialItemCount:
@@ -252,30 +253,53 @@ class _TrackPageState extends State<TrackPage> {
           if (selectedDateExpenses.length <= i) return null;
 
           Expense expense = selectedDateExpenses[i];
-          return FadeTransition(
-            opacity: anim,
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black87,
-                    blurRadius: 5,
-                    offset: Offset(0, 2),
-                  )
-                ],
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.blue[200],
+          return Slidable(
+            actionPane: SlidableStrechActionPane(),
+            direction: Axis.horizontal,
+            actions: <Widget>[
+              IconSlideAction(
+                caption: 'Edit',
+                color: Colors.blue,
+                icon: Icons.edit,
+                onTap: () => editButtonPressed(expense.id),
               ),
-              child: ExpenseTile(
-                deleteButtonPressed: deleteButtonPressed,
-                editButtonPressed: editButtonPressed,
-                expense: expense,
+            ],
+            secondaryActions: <Widget>[
+              IconSlideAction(
+                caption: 'Delete',
+                color: Colors.red,
+                icon: Icons.delete,
+                onTap: () => deleteButtonPressed(expense.id),
+              ),
+            ],
+            child: FadeTransition(
+              opacity: anim,
+              child: Container(
+                // margin: const EdgeInsets.symmetric(vertical: 0.5),
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      width: 1.5,
+                      color: Colors.black,
+                    ),
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    stops: [
+                      0.60,
+                      1,
+                    ],
+                    colors: [
+                      Colors.blue[200],
+                      Colors.blue[100],
+                    ],
+                  ),
+                ),
+                child: ExpenseTile(
+                  expense: expense,
+                ),
               ),
             ),
           );
@@ -309,10 +333,9 @@ class _TrackPageState extends State<TrackPage> {
                 color: Colors.blue[200],
               ),
               child: ExpenseTile(
-                  deleteButtonPressed: null,
-                  editButtonPressed: null,
-                  expense: thumbnailExpense,
-                  isThumbnail: true));
+                expense: thumbnailExpense,
+                isThumbnail: true,
+              ));
         } else {
           return Container();
         }
@@ -332,7 +355,7 @@ class _TrackPageState extends State<TrackPage> {
           color: Colors.grey[400],
           border: Border.all(
             color: Colors.black,
-            width: 3,
+            width: 2,
           ),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -343,9 +366,9 @@ class _TrackPageState extends State<TrackPage> {
             Text(
               'Total Expense: $totalPrice',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 19,
                 fontWeight: FontWeight.w500,
-                letterSpacing: 1.2
+                letterSpacing: 1.2,
               ),
             ),
           ],
@@ -362,10 +385,10 @@ class _TrackPageState extends State<TrackPage> {
       padding: const EdgeInsets.all(4.0),
       margin: const EdgeInsets.only(bottom: 5),
       decoration: BoxDecoration(
-        color: Colors.red[400],
+        color: Colors.blue[200],
         border: Border.all(
           color: Colors.black,
-          width: 3,
+          width: 2,
         ),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -378,15 +401,19 @@ class _TrackPageState extends State<TrackPage> {
             );
           },
           onTap: () async {
+            if (editing.isNotEmpty) return;
             hideTotalPrice = true;
             if (calendarHeight == null)
               setState(() {
+                print('sestate5');
                 calendarHeight = 0;
               });
 
             if (!showThumbnail) {
               showThumbnail = true;
-              setState(() {});
+              setState(() {
+                print('sestate6');
+              });
             }
           },
           focusNode: focusNode,
@@ -424,6 +451,7 @@ class _TrackPageState extends State<TrackPage> {
     store.thumbnailExpense = null;
 
     controller.text = '';
+
     if (editing.isNotEmpty) {
       //EDITING PART
 
@@ -445,11 +473,12 @@ class _TrackPageState extends State<TrackPage> {
     }
     showThumbnail = false;
     hideTotalPrice = false;
-    setState(() {});
+    setState(() {
+      print('sestate7');
+    });
   }
 
   void deleteButtonPressed(int id) {
-    //print('deleteButtonPressed');
     Expense expense =
         store.selectedDateExpenses.firstWhere((element) => element.id == id);
 
@@ -459,36 +488,41 @@ class _TrackPageState extends State<TrackPage> {
       return FadeTransition(
         opacity: anim,
         child: Container(
-          margin: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          // margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Colors.black,
-              width: 1,
+            border: Border(
+              bottom: BorderSide(
+                width: 1,
+                color: Colors.black,
+              ),
             ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black87,
-                blurRadius: 5,
-                offset: Offset(0, 2),
+                blurRadius: 6,
+                offset: Offset(0, 1),
               )
             ],
-            borderRadius: BorderRadius.circular(12),
+            // borderRadius: BorderRadius.circular(12),
             color: Colors.blue[200],
           ),
           child: ExpenseTile(
-            deleteButtonPressed: deleteButtonPressed,
-            editButtonPressed: editButtonPressed,
             expense: expense,
           ),
         ),
       );
     };
 
-    listKey.currentState
-        .removeItem(store.selectedDateExpenses.indexOf(expense), builder);
+    listKey.currentState.removeItem(
+      store.selectedDateExpenses.indexOf(expense),
+      builder,
+      duration: Duration(milliseconds: 500),
+    );
     store.deleteExpense(expense);
-    setState(() {});
+    setState(() {
+      print('sestate9');
+    });
   }
 
   void editButtonPressed(int id) {
@@ -497,16 +531,18 @@ class _TrackPageState extends State<TrackPage> {
     );
 
     // print('Expense Text : ${expense.text}');
-    focusNode.requestFocus();
-    // setState(() {});
-    controller.text = expense.text;
     editing = {expense};
+    focusNode.requestFocus();
+
     print('editing $editing');
+
+    controller.text = expense.text;
+
     // print('Controller text : ${controller.text}');
   }
 
   Future calendarButtonPressed() async {
-    FocusScope.of(context).unfocus();
+    focusNode.unfocus();
     await Future.doWhile(() async {
       await Future.delayed(Duration(milliseconds: 200));
       return isKeyboardActive;
@@ -516,7 +552,9 @@ class _TrackPageState extends State<TrackPage> {
       calendarHeight = null;
     else
       calendarHeight = 0;
-    setState(() {});
+    setState(() {
+      print('sestate8');
+    });
   }
 
   bool isSelectedDate(Expense exp) {

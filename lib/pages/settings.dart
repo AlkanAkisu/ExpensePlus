@@ -21,21 +21,25 @@ class Settings extends HookWidget {
     buttonName = useState('Change Tag Color');
     this.context = context;
 
+
     return Scaffold(
       body: Center(
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: buttons(),
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                tagAdder()
-              ],
+          child: Container(
+            color: const Color(0xfff9f9f9),
+            child: SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: buttons(),
+                  ),
+                  SizedBox(
+                    height: 30,
+                  ),
+                  tagAdder()
+                ],
+              ),
             ),
           ),
         ),

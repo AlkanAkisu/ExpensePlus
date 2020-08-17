@@ -1,7 +1,9 @@
+import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
 import 'package:tracker_but_fast/database/expense_provider.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 import 'package:tracker_but_fast/models/expense.dart';
+import 'package:tracker_but_fast/pages/graph.dart';
 
 part 'expenses_store.g.dart';
 
@@ -17,6 +19,10 @@ abstract class MobxStoreBase with Store {
   @observable
   List<Expense> selectedDateExpenses = new List<Expense>();
   @observable
+  Map<TabViewType, List<Expense>> graphSelectedDateExpenses = new Map();
+  @observable
+  DateTime graphSelectedDate;
+  @observable
   DateTime selectedDate;
   @observable
   List<Tag> tags = new List<Tag>();
@@ -26,6 +32,7 @@ abstract class MobxStoreBase with Store {
   //
   //  EXPENSE SECTION
   //
+  // #region EXPENSE
 
   @action
   void addExpense(Expense expense) {
@@ -82,20 +89,12 @@ abstract class MobxStoreBase with Store {
         'STORE:\tselectedDateUpdated. selectedDateExpenses ==> ${selectedDateExpenses.map((e) => e.name).join(' ')}');
   }
 
-  @action
-  double getSelectedDateTotalPrice([DateTime inputSelectedDate]) {
-    return expenses.fold(0, (prev, expense) {
-      //todo add limit
-
-      if (isSelectedDate(expense, inputSelectedDate ?? selectedDate))
-        return prev + expense.getTotalExpense();
-      return prev;
-    });
-  }
+// #endregion
 
   //
   //  TAGS SECTION
   //
+// #region TAG
 
   @action
   void addTag(Tag newTag) {
@@ -162,10 +161,79 @@ abstract class MobxStoreBase with Store {
     return oldTag;
   }
 
+  Tag getTagByName(String name) {
+    var found = tags.where(
+      (element) => element.name == name || element.shorten == name,
+    ).toList();
+    if (found.isEmpty) return null;
+    return found[0];
+  }
+
   @action
   setThumbnailExpense(Expense newExpense) {
     thumbnailExpense = newExpense;
   }
+// #endregion
+
+  //
+  //  GRAPH SECTION
+  //
+  // #region GRAPH
+  @action
+  void updateGraphSelectedDate(DateTime inputSelectedDate) {
+    selectedDate = DateTime.parse(selectedDate.toIso8601String());
+    graphSelectedDate = inputSelectedDate;
+    graphSelectedDateExpenses[TabViewType.Day] = expenses
+        .where(
+          (element) => isSelectedDate(element, graphSelectedDate),
+        )
+        .toList();
+    graphSelectedDateExpenses[TabViewType.Week] = expenses
+        .where(
+          (element) =>
+              weekNumber(element.date) == weekNumber(graphSelectedDate) &&
+              element.date.year == graphSelectedDate.year,
+        )
+        .toList();
+    graphSelectedDateExpenses[TabViewType.Month] = expenses
+        .where(
+          (element) =>
+              element.date.month == graphSelectedDate.month &&
+              element.date.year == graphSelectedDate.year,
+        )
+        .toList();
+
+    print('STORE:\t graph selected date updated. $graphSelectedDate');
+  }
+
+  int weekNumber(DateTime date) {
+    int dayOfYear = int.parse(DateFormat("D").format(date));
+    return ((dayOfYear - date.weekday + 10) / 7).floor();
+  }
+
+  @action
+  double getSelectedDateTotalPrice([DateTime inputSelectedDate]) {
+    return expenses.fold(0, (prev, expense) {
+      //todo add limit
+
+      if (isSelectedDate(expense, inputSelectedDate ?? selectedDate))
+        return prev + expense.getTotalExpense();
+      return prev;
+    });
+  }
+
+  Map<Tag, double> getTagTotalGraph(List<Expense> expenses) {
+    Map<Tag, double> rv = Map();
+    for (var expense in expenses) {
+      expense.tags.forEach((tag) {
+        rv[tag] ??= 0;
+        rv[tag] += expense.getTotalExpense();
+      });
+    }
+    return rv;
+  }
+
+  // #endregion
 
   //HELPER FUNCTIONS
   bool isSelectedDate(Expense exp, [DateTime dateInput]) {

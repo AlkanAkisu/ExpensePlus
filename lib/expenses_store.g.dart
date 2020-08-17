@@ -41,6 +41,38 @@ mixin _$MobxStore on MobxStoreBase, Store {
     });
   }
 
+  final _$graphSelectedDateExpensesAtom =
+      Atom(name: 'MobxStoreBase.graphSelectedDateExpenses');
+
+  @override
+  Map<TabViewType, List<Expense>> get graphSelectedDateExpenses {
+    _$graphSelectedDateExpensesAtom.reportRead();
+    return super.graphSelectedDateExpenses;
+  }
+
+  @override
+  set graphSelectedDateExpenses(Map<TabViewType, List<Expense>> value) {
+    _$graphSelectedDateExpensesAtom
+        .reportWrite(value, super.graphSelectedDateExpenses, () {
+      super.graphSelectedDateExpenses = value;
+    });
+  }
+
+  final _$graphSelectedDateAtom = Atom(name: 'MobxStoreBase.graphSelectedDate');
+
+  @override
+  DateTime get graphSelectedDate {
+    _$graphSelectedDateAtom.reportRead();
+    return super.graphSelectedDate;
+  }
+
+  @override
+  set graphSelectedDate(DateTime value) {
+    _$graphSelectedDateAtom.reportWrite(value, super.graphSelectedDate, () {
+      super.graphSelectedDate = value;
+    });
+  }
+
   final _$selectedDateAtom = Atom(name: 'MobxStoreBase.selectedDate');
 
   @override
@@ -156,17 +188,6 @@ mixin _$MobxStore on MobxStoreBase, Store {
   }
 
   @override
-  double getSelectedDateTotalPrice([DateTime inputSelectedDate]) {
-    final _$actionInfo = _$MobxStoreBaseActionController.startAction(
-        name: 'MobxStoreBase.getSelectedDateTotalPrice');
-    try {
-      return super.getSelectedDateTotalPrice(inputSelectedDate);
-    } finally {
-      _$MobxStoreBaseActionController.endAction(_$actionInfo);
-    }
-  }
-
-  @override
   void addTag(Tag newTag) {
     final _$actionInfo = _$MobxStoreBaseActionController.startAction(
         name: 'MobxStoreBase.addTag');
@@ -244,10 +265,34 @@ mixin _$MobxStore on MobxStoreBase, Store {
   }
 
   @override
+  void updateGraphSelectedDate(DateTime inputSelectedDate) {
+    final _$actionInfo = _$MobxStoreBaseActionController.startAction(
+        name: 'MobxStoreBase.updateGraphSelectedDate');
+    try {
+      return super.updateGraphSelectedDate(inputSelectedDate);
+    } finally {
+      _$MobxStoreBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  double getSelectedDateTotalPrice([DateTime inputSelectedDate]) {
+    final _$actionInfo = _$MobxStoreBaseActionController.startAction(
+        name: 'MobxStoreBase.getSelectedDateTotalPrice');
+    try {
+      return super.getSelectedDateTotalPrice(inputSelectedDate);
+    } finally {
+      _$MobxStoreBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
 expenses: ${expenses},
 selectedDateExpenses: ${selectedDateExpenses},
+graphSelectedDateExpenses: ${graphSelectedDateExpenses},
+graphSelectedDate: ${graphSelectedDate},
 selectedDate: ${selectedDate},
 tags: ${tags},
 thumbnailExpense: ${thumbnailExpense}

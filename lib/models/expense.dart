@@ -1,3 +1,5 @@
+import 'package:tracker_but_fast/expenses_store.dart';
+
 import 'tag.dart';
 
 class Expense {
@@ -27,10 +29,7 @@ class Expense {
       name: '',
       prices: [0],
       tags: [
-        new Tag(
-          name: 'other',
-          hexCode: 0xff9e9e9e,
-        )
+        Tag.otherTag,
       ],
       limit: true,
     );
@@ -42,7 +41,10 @@ class Expense {
   factory Expense.fromJson(Map<String, dynamic> json) {
     List<Tag> tags = List();
     json["tags"].forEach((element) {
-      tags.add(Tag.fromJson(element));
+      if (element['name'] == 'other')
+        tags.add(Tag.otherTag);
+      else
+        tags.add(MobxStore.st.getTagByName(element['name'])); //todo debug
     });
     List<double> prices = List();
     json["prices"]?.forEach((element) {

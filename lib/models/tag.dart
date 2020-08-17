@@ -4,6 +4,10 @@ class Tag {
   String name, shorten;
   int hexCode, id;
   Color color;
+  static Tag otherTag = Tag(
+    name: 'other',
+    hexCode: 0xff9e9e9e,
+  );
 
   Tag({this.id, this.name, this.shorten, this.hexCode, this.color}) {
     shorten ??= name;
@@ -27,10 +31,7 @@ class Tag {
       };
 
   static Tag other() {
-    return new Tag(
-      name: 'other',
-      hexCode: 0xff9e9e9e,
-    );
+    return Tag.otherTag;
   }
 
   @override

@@ -1,7 +1,11 @@
 TODO:
   #SPECIFIC
+  LIMIT:
+    *dailyLimit
+    *monthlyLimit
+    *yearlyLimit
+
   CALENDER:
-    #*KEYBOARD_MAKE_IT_EXCEED_WIDTH singlechildSW
 
 
 
@@ -9,13 +13,14 @@ TODO:
 
 
   TAG:
-    
+
 
 
 
   BUG:
-    *SOLVE_CALENDER_PROBLEM
-    *takePricesOnlyTwoDecimalPointsIfMoreThenEntered
+    *editButtonNotWorkingAfterClickingCalendar
+
+
 
 
 
@@ -23,16 +28,10 @@ TODO:
   #GENERAL
 
   PAGE GRAPH:
-    *CALENDAR
-      -CALENDAR_WITH_TOTAL_PRICE_UNDER
-    *GRAPH
-      -PERCENT_EXPENSE_MONTHLY_WEEKLY_BY_TAG
+
 
   PAGE SETTINGS:
-    *ADD_SHORTEN_TAG
     *ADD_WEEKLY_MONTHLY_EXPENSE_REPEAT
-
-
 
   BOTTOM_NAVIGATION_BAR:
 

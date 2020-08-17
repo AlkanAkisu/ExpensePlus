@@ -29,6 +29,7 @@
 .pub-cache/
 .pub/
 /build/
+todo.yaml
 
 # Web related
 lib/generated_plugin_registrant.dart

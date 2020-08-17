@@ -7,13 +7,9 @@ import 'package:tracker_but_fast/models/tag.dart';
 class ExpenseTile extends StatefulWidget {
   Expense expense;
   bool isThumbnail;
-  final void Function(int) deleteButtonPressed;
-  final void Function(int) editButtonPressed;
 
   ExpenseTile({
     this.expense,
-    this.deleteButtonPressed,
-    this.editButtonPressed,
     this.isThumbnail,
   }) {
     expense ??= Expense.empty();
@@ -36,7 +32,7 @@ class _ExpenseTileState extends State<ExpenseTile> {
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           //BUTTON SECTION
-          buttonsHeader(),
+          // buttonsHeader(),
 
           //TEXT SECTION
           Expanded(
@@ -52,7 +48,6 @@ class _ExpenseTileState extends State<ExpenseTile> {
               ),
             ),
           ),
-
           priceSection(expense)
         ],
       ),
@@ -66,8 +61,8 @@ class _ExpenseTileState extends State<ExpenseTile> {
           child: IconButton(
             icon: Icon(Icons.delete),
             onPressed: () => {
-              if (widget.isThumbnail == null)
-                widget.deleteButtonPressed(widget.expense.id)
+              // if (widget.isThumbnail == null)
+              //   widget.deleteButtonPressed(widget.expense.id)
             },
             color: Colors.red[400],
           ),
@@ -76,8 +71,8 @@ class _ExpenseTileState extends State<ExpenseTile> {
           child: IconButton(
             icon: Icon(Icons.edit),
             onPressed: () => {
-              if (widget.isThumbnail == null)
-                widget.editButtonPressed(widget.expense.id)
+              // if (widget.isThumbnail == null)
+              //   widget.editButtonPressed(widget.expense.id)
             },
           ),
         ),
@@ -87,14 +82,19 @@ class _ExpenseTileState extends State<ExpenseTile> {
 
   Widget expenseNameText(Expense expense) {
     return Container(
-      height: 40,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Align(
-          alignment: Alignment.center,
-          child: Text(
-            expense?.name ?? '',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+      child: Center(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Align(
+            alignment: FractionalOffset.centerLeft,
+            child: Text(
+              expense?.name ?? '',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       ),
@@ -103,12 +103,7 @@ class _ExpenseTileState extends State<ExpenseTile> {
 
   Widget tagRow(Expense expense) {
     if (expense.tags == null) {
-      expense.tags = [
-        new Tag(
-          name: 'other',
-          hexCode: 0xff9e9e9e,
-        )
-      ];
+      expense.tags = [Tag.otherTag];
     }
     return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -149,24 +144,7 @@ class _ExpenseTileState extends State<ExpenseTile> {
     double totalPrice = expense?.getTotalExpense() ?? 0;
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      width: 160,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.black,
-          width: 0.3,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black87,
-            blurRadius: 1,
-            offset: Offset(0, 1),
-          )
-        ],
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.blue[200],
-      ),
+      padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       child: Row(
         children: <Widget>[
           SingleChildScrollView(
@@ -174,8 +152,12 @@ class _ExpenseTileState extends State<ExpenseTile> {
             child: Column(
               children: expense.prices.map((price) {
                 return Container(
+                  constraints: BoxConstraints(
+                    minWidth: 30,
+                    minHeight: 30,
+                  ),
                   padding:
-                      const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                      const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
                   margin:
                       const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
                   decoration: BoxDecoration(
@@ -186,15 +168,19 @@ class _ExpenseTileState extends State<ExpenseTile> {
                         offset: Offset(0, 1),
                       )
                     ],
-                    borderRadius: BorderRadius.circular(5),
-                    color: Colors.blue[400],
+                    borderRadius: BorderRadius.circular(50),
+                    gradient: RadialGradient(
+                      colors: [
+                        Colors.blue[300],
+                        Colors.blue[400],
+                      ],
+                    ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(3),
+                  child: Center(
                     child: Text(
                       price.toString(),
                       style:
-                          TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                          TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
                     ),
                   ),
                 );
@@ -204,28 +190,35 @@ class _ExpenseTileState extends State<ExpenseTile> {
           SizedBox(
             width: 5,
           ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 5),
-              height: double.infinity,
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black87,
-                    blurRadius: 2,
-                    offset: Offset(0, 1),
-                  )
+          Container(
+            constraints: BoxConstraints(
+              minWidth: 70,
+              minHeight: 70,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 5),
+            height: double.infinity,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black87,
+                  blurRadius: 2,
+                  offset: Offset(0, 1),
+                )
+              ],
+              borderRadius: BorderRadius.circular(50),
+              gradient: RadialGradient(
+                colors: [
+                  Colors.blue[300],
+                  Colors.blue[400],
                 ],
-                borderRadius: BorderRadius.circular(5),
-                color: Colors.blue[400],
               ),
-              child: Center(
-                child: Text(
-                  totalPrice.toString(),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+            ),
+            child: Center(
+              child: Text(
+                totalPrice.toString(),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
