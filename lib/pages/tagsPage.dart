@@ -6,7 +6,7 @@ import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 
-class Settings extends HookWidget {
+class TagsPage extends HookWidget {
   BuildContext context;
   ValueNotifier<Color> currentColor;
   ValueNotifier<String> buttonName;

@@ -253,52 +253,49 @@ class _TrackPageState extends State<TrackPage> {
           if (selectedDateExpenses.length <= i) return null;
 
           Expense expense = selectedDateExpenses[i];
-          return Slidable(
-            actionPane: SlidableStrechActionPane(),
-            direction: Axis.horizontal,
-            actions: <Widget>[
-              IconSlideAction(
-                caption: 'Edit',
-                color: Colors.blue,
-                icon: Icons.edit,
-                onTap: () => editButtonPressed(expense.id),
-              ),
-            ],
-            secondaryActions: <Widget>[
-              IconSlideAction(
-                caption: 'Delete',
-                color: Colors.red,
-                icon: Icons.delete,
-                onTap: () => deleteButtonPressed(expense.id),
-              ),
-            ],
-            child: FadeTransition(
-              opacity: anim,
-              child: Container(
-                // margin: const EdgeInsets.symmetric(vertical: 0.5),
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      width: 1.5,
-                      color: Colors.black,
-                    ),
-                  ),
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    stops: [
-                      0.60,
-                      1,
-                    ],
-                    colors: [
-                      Colors.blue[200],
-                      Colors.blue[100],
-                    ],
-                  ),
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 2),
+            child: Slidable(
+              actionPane: SlidableStrechActionPane(),
+              direction: Axis.horizontal,
+              actions: <Widget>[
+                IconSlideAction(
+                  caption: 'Edit',
+                  color: Colors.blue,
+                  icon: Icons.edit,
+                  onTap: () => editButtonPressed(expense.id),
                 ),
-                child: ExpenseTile(
-                  expense: expense,
+              ],
+              secondaryActions: <Widget>[
+                IconSlideAction(
+                  caption: 'Delete',
+                  color: Colors.red,
+                  icon: Icons.delete,
+                  onTap: () => deleteButtonPressed(expense.id),
+                ),
+              ],
+              child: FadeTransition(
+                opacity: anim,
+                child: Container(
+
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 2,
+                      ),
+                      // borderRadius: BorderRadius.circular(6),
+                      color: Colors.grey[50],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black87,
+                          offset: Offset(0, 1),
+                          blurRadius: 2,
+                        )
+                      ]),
+                  child: ExpenseTile(
+                    expense: expense,
+                  ),
                 ),
               ),
             ),
@@ -330,7 +327,7 @@ class _TrackPageState extends State<TrackPage> {
                   )
                 ],
                 borderRadius: BorderRadius.circular(12),
-                color: Colors.blue[200],
+                color: Colors.grey[50],
               ),
               child: ExpenseTile(
                 expense: thumbnailExpense,

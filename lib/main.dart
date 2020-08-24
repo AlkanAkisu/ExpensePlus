@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tracker_but_fast/pages/graph.dart';
-import 'package:tracker_but_fast/pages/settings.dart';
-import 'package:tracker_but_fast/pages/track.dart';
+import 'package:tracker_but_fast/pages/graphPage.dart';
+import 'package:tracker_but_fast/pages/tagsPage.dart';
+import 'package:tracker_but_fast/pages/trackPage.dart';
 
 void main() {
   runApp(MyApp());
@@ -24,7 +24,7 @@ class _MyAppState extends State<MyApp> {
   final List<Destination> allDestinations = <Destination>[
     Destination('Graph', Icons.trending_up, GraphPage()),
     Destination('Add Expense', Icons.attach_money, TrackPage()),
-    Destination('Settings', Icons.settings, Settings()),
+    Destination('Tags', Icons.bookmark_border, TagsPage()),
   ];
 
   @override

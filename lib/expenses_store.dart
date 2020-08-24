@@ -3,7 +3,7 @@ import 'package:mobx/mobx.dart';
 import 'package:tracker_but_fast/database/expense_provider.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 import 'package:tracker_but_fast/models/expense.dart';
-import 'package:tracker_but_fast/pages/graph.dart';
+import 'package:tracker_but_fast/pages/graphPage.dart';
 
 part 'expenses_store.g.dart';
 

@@ -54,32 +54,6 @@ class _ExpenseTileState extends State<ExpenseTile> {
     );
   }
 
-  Widget buttonsHeader() {
-    return Column(
-      children: <Widget>[
-        Expanded(
-          child: IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () => {
-              // if (widget.isThumbnail == null)
-              //   widget.deleteButtonPressed(widget.expense.id)
-            },
-            color: Colors.red[400],
-          ),
-        ),
-        Expanded(
-          child: IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () => {
-              // if (widget.isThumbnail == null)
-              //   widget.editButtonPressed(widget.expense.id)
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget expenseNameText(Expense expense) {
     return Container(
       child: Center(
@@ -110,26 +84,28 @@ class _ExpenseTileState extends State<ExpenseTile> {
         child: Row(
           children: expense.tags.map((tag) {
             return Container(
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 3),
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
               margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 3),
-              decoration: BoxDecoration(boxShadow: [
-                BoxShadow(
-                  color: Colors.black87,
-                  blurRadius: 2,
-                  offset: Offset(0, 1),
-                )
-              ], borderRadius: BorderRadius.circular(5), color: tag.color),
-              child: Padding(
-                padding: const EdgeInsets.all(3),
-                child: Text(
-                  tag.name,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: useWhiteForeground(tag.color)
-                        ? const Color(0xffffffff)
-                        : const Color(0xff000000),
-                  ),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: tag.color,
+                      blurRadius: 2,
+                      offset: Offset(0, 1),
+                    )
+                  ],
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(
+                    color: tag.color,
+                    width: 1,
+                  )),
+              child: Text(
+                tag.name,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: tag.color,
                 ),
               ),
             );
@@ -161,6 +137,10 @@ class _ExpenseTileState extends State<ExpenseTile> {
                   margin:
                       const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
                   decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 1,
+                      color: Colors.blue[700],
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black87,
@@ -168,19 +148,17 @@ class _ExpenseTileState extends State<ExpenseTile> {
                         offset: Offset(0, 1),
                       )
                     ],
+                    color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(50),
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.blue[300],
-                        Colors.blue[400],
-                      ],
-                    ),
                   ),
                   child: Center(
                     child: Text(
                       price.toString(),
-                      style:
-                          TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue[700],
+                      ),
                     ),
                   ),
                 );
@@ -206,12 +184,11 @@ class _ExpenseTileState extends State<ExpenseTile> {
                 )
               ],
               borderRadius: BorderRadius.circular(50),
-              gradient: RadialGradient(
-                colors: [
-                  Colors.blue[300],
-                  Colors.blue[400],
-                ],
+              border: Border.all(
+                width: 1,
+                color: Colors.blue[700],
               ),
+              color: Colors.grey[100],
             ),
             child: Center(
               child: Text(
@@ -219,6 +196,7 @@ class _ExpenseTileState extends State<ExpenseTile> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
+                  color: Colors.blue[700],
                 ),
               ),
             ),
