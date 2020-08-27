@@ -31,6 +31,7 @@ class TagProvider {
 
   /// Insert expense on database and returns as int
   Future<Tag> createTag(String name, String shorten, int hexCode) async {
+    if (shorten.isEmpty) shorten = name;
     Tag newTag = new Tag(
       name: name,
       shorten: shorten,

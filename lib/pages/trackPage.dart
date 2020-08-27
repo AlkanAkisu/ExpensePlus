@@ -7,9 +7,11 @@ import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tracker_but_fast/database/expense_provider.dart';
+import 'package:tracker_but_fast/database/limit_provider.dart';
 import 'package:tracker_but_fast/database/tag_provider.dart';
 import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:tracker_but_fast/models/expense.dart';
+import 'package:tracker_but_fast/pages/graphPage.dart';
 import 'package:tracker_but_fast/utilities/dummy_data.dart';
 import 'package:tracker_but_fast/utilities/regex.dart';
 import 'package:tracker_but_fast/widgets/expenseTile.dart';
@@ -87,6 +89,16 @@ class _TrackPageState extends State<TrackPage> {
             }
           });
         // print('store tags => ${store.tags}');
+      });
+
+    if (store.limitMap.isEmpty)
+      LimitProvider.db.getLimit().then((limit) {
+        store.limitMap = limit;
+      });
+
+    if (store.isAutomatic == null)
+      LimitProvider.db.getIsAutomatic().then((isAuto) {
+        store.isAutomatic = isAuto ?? false;
       });
   }
 
@@ -347,15 +359,23 @@ class _TrackPageState extends State<TrackPage> {
 
   Widget totalPriceWidget() {
     return Observer(builder: (_) {
-      store.selectedDate; //t update when change date
+      store.selectedDate;
+      store.limitMap;
+
       var totalPrice = store.getSelectedDateTotalPrice();
+
+      //text styles
+      bool limitextended = totalPrice > store.limitMap[ViewType.Day];
+      Color color = limitextended ? Colors.red[700] : Colors.blue[700];
+      FontWeight fontWeight = limitextended ? FontWeight.w700 : FontWeight.w500;
+      double fontSize = limitextended ? 21 : 19;
 
       return Container(
         padding: const EdgeInsets.all(4.0),
         margin: const EdgeInsets.only(bottom: 5),
         decoration: BoxDecoration(
           border: Border.all(
-            color: Colors.blue[700],
+            color: color,
             width: 2,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -365,12 +385,12 @@ class _TrackPageState extends State<TrackPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'Total Expense: $totalPrice',
+              'Total / Limit : $totalPrice / ${store.limitMap[ViewType.Day]}',
               style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w500,
+                fontSize: fontSize,
+                fontWeight: fontWeight,
                 letterSpacing: 1.2,
-                color: Colors.blue[700],
+                color: color,
               ),
             ),
           ],
@@ -432,13 +452,9 @@ class _TrackPageState extends State<TrackPage> {
             letterSpacing: 1.6,
           ),
           decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            //focusedBorder: UnderlineInputBorder(),
-            hintText: 'Enter a expense',
-            hintStyle: TextStyle(
-                // color: Colors.white.withOpacity(0.8),
-                ),
-          ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              hintText: 'Enter a expense',
+              helperText: 'Use . as a prefix to add tag '),
         ),
       ),
     );
@@ -543,11 +559,13 @@ class _TrackPageState extends State<TrackPage> {
   }
 
   Future calendarButtonPressed() async {
-    focusNode.unfocus();
-    await Future.doWhile(() async {
-      await Future.delayed(Duration(milliseconds: 200));
-      return isKeyboardActive;
-    });
+    if (isKeyboardActive) {
+      focusNode.unfocus();
+      await Future.doWhile(() async {
+        await Future.delayed(Duration(milliseconds: 200));
+        return isKeyboardActive;
+      });
+    }
 
     if (calendarHeight != null)
       calendarHeight = null;

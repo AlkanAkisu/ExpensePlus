@@ -14,12 +14,14 @@ class TagTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        Expanded(child: Center(child: tagContainer(tag.name, width))),
-        Expanded(child: Center(child: tagContainer(tag.shorten, width))),
-      ],
+    return GestureDetector(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Expanded(child: Center(child: tagContainer(tag.name, width))),
+          Expanded(child: Center(child: tagContainer(tag.shorten, width))),
+        ],
+      ),
     );
   }
 
@@ -30,10 +32,7 @@ class TagTile extends StatelessWidget {
       ),
       padding: EdgeInsets.all(5),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: tag.color,
-          width: 1.5
-        ),
+        border: Border.all(color: tag.color, width: 1.5),
         borderRadius: BorderRadius.circular(3),
       ),
       child: Text(

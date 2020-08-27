@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
-import 'package:tracker_but_fast/database/expense_provider.dart';
+import 'package:tracker_but_fast/database/limit_provider.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 import 'package:tracker_but_fast/models/expense.dart';
 import 'package:tracker_but_fast/pages/graphPage.dart';
@@ -19,7 +19,7 @@ abstract class MobxStoreBase with Store {
   @observable
   List<Expense> selectedDateExpenses = new List<Expense>();
   @observable
-  Map<TabViewType, List<Expense>> graphSelectedDateExpenses = new Map();
+  Map<ViewType, List<Expense>> graphSelectedDateExpenses = new Map();
   @observable
   DateTime graphSelectedDate;
   @observable
@@ -28,6 +28,10 @@ abstract class MobxStoreBase with Store {
   List<Tag> tags = new List<Tag>();
   @observable
   Expense thumbnailExpense = new Expense();
+  @observable
+  Map<ViewType, double> limitMap = new Map();
+  @observable
+  bool isAutomatic;
 
   //
   //  EXPENSE SECTION
@@ -145,7 +149,7 @@ abstract class MobxStoreBase with Store {
       return e;
     }).toList();
 
-    print('STORE:\tupdated tag ${tagToUpdate.name}');
+    //print('STORE:\tupdated tag ${tagToUpdate.name}');
   }
 
   @action
@@ -162,9 +166,11 @@ abstract class MobxStoreBase with Store {
   }
 
   Tag getTagByName(String name) {
-    var found = tags.where(
-      (element) => element.name == name || element.shorten == name,
-    ).toList();
+    var found = tags
+        .where(
+          (element) => element.name == name || element.shorten == name,
+        )
+        .toList();
     if (found.isEmpty) return null;
     return found[0];
   }
@@ -183,19 +189,19 @@ abstract class MobxStoreBase with Store {
   void updateGraphSelectedDate(DateTime inputSelectedDate) {
     selectedDate = DateTime.parse(selectedDate.toIso8601String());
     graphSelectedDate = inputSelectedDate;
-    graphSelectedDateExpenses[TabViewType.Day] = expenses
+    graphSelectedDateExpenses[ViewType.Day] = expenses
         .where(
           (element) => isSelectedDate(element, graphSelectedDate),
         )
         .toList();
-    graphSelectedDateExpenses[TabViewType.Week] = expenses
+    graphSelectedDateExpenses[ViewType.Week] = expenses
         .where(
           (element) =>
               weekNumber(element.date) == weekNumber(graphSelectedDate) &&
               element.date.year == graphSelectedDate.year,
         )
         .toList();
-    graphSelectedDateExpenses[TabViewType.Month] = expenses
+    graphSelectedDateExpenses[ViewType.Month] = expenses
         .where(
           (element) =>
               element.date.month == graphSelectedDate.month &&
@@ -235,11 +241,39 @@ abstract class MobxStoreBase with Store {
 
   // #endregion
 
-  //HELPER FUNCTIONS
+  //
+  //  LIMIT SECTION
+  //
+  // #region LIMIT
+  @action
+  Future<void> setLimit(ViewType viewType, double limit,
+      [bool setDatabase]) async {
+    limitMap[viewType] = limit;
+    if (setDatabase ?? false) await LimitProvider.db.updateLimit(limitMap);
+  }
+
+  @action
+  Future<void> automaticSet([bool setDatabase]) async {
+    final monthly = limitMap[ViewType.Month];
+    setLimit(
+      ViewType.Day,
+      double.parse((monthly / 30).toStringAsFixed(2)),
+    );
+    setLimit(
+      ViewType.Week,
+      double.parse((monthly / 30 * 7).toStringAsFixed(2)),
+    );
+    if (setDatabase ?? false) await LimitProvider.db.updateLimit(limitMap);
+  }
+  //#endregion
+
+  // #region HELPER FUNCTIONS
   bool isSelectedDate(Expense exp, [DateTime dateInput]) {
     dateInput ??= selectedDate;
     return exp.date.year == dateInput.year &&
         exp.date.month == dateInput.month &&
         exp.date.day == dateInput.day;
   }
+  // #endregion
+
 }

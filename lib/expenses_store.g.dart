@@ -45,13 +45,13 @@ mixin _$MobxStore on MobxStoreBase, Store {
       Atom(name: 'MobxStoreBase.graphSelectedDateExpenses');
 
   @override
-  Map<TabViewType, List<Expense>> get graphSelectedDateExpenses {
+  Map<ViewType, List<Expense>> get graphSelectedDateExpenses {
     _$graphSelectedDateExpensesAtom.reportRead();
     return super.graphSelectedDateExpenses;
   }
 
   @override
-  set graphSelectedDateExpenses(Map<TabViewType, List<Expense>> value) {
+  set graphSelectedDateExpenses(Map<ViewType, List<Expense>> value) {
     _$graphSelectedDateExpensesAtom
         .reportWrite(value, super.graphSelectedDateExpenses, () {
       super.graphSelectedDateExpenses = value;
@@ -116,6 +116,51 @@ mixin _$MobxStore on MobxStoreBase, Store {
     _$thumbnailExpenseAtom.reportWrite(value, super.thumbnailExpense, () {
       super.thumbnailExpense = value;
     });
+  }
+
+  final _$limitMapAtom = Atom(name: 'MobxStoreBase.limitMap');
+
+  @override
+  Map<ViewType, double> get limitMap {
+    _$limitMapAtom.reportRead();
+    return super.limitMap;
+  }
+
+  @override
+  set limitMap(Map<ViewType, double> value) {
+    _$limitMapAtom.reportWrite(value, super.limitMap, () {
+      super.limitMap = value;
+    });
+  }
+
+  final _$isAutomaticAtom = Atom(name: 'MobxStoreBase.isAutomatic');
+
+  @override
+  bool get isAutomatic {
+    _$isAutomaticAtom.reportRead();
+    return super.isAutomatic;
+  }
+
+  @override
+  set isAutomatic(bool value) {
+    _$isAutomaticAtom.reportWrite(value, super.isAutomatic, () {
+      super.isAutomatic = value;
+    });
+  }
+
+  final _$setLimitAsyncAction = AsyncAction('MobxStoreBase.setLimit');
+
+  @override
+  Future<void> setLimit(ViewType viewType, double limit, [bool setDatabase]) {
+    return _$setLimitAsyncAction
+        .run(() => super.setLimit(viewType, limit, setDatabase));
+  }
+
+  final _$automaticSetAsyncAction = AsyncAction('MobxStoreBase.automaticSet');
+
+  @override
+  Future<void> automaticSet([bool setDatabase]) {
+    return _$automaticSetAsyncAction.run(() => super.automaticSet(setDatabase));
   }
 
   final _$MobxStoreBaseActionController =
@@ -295,7 +340,9 @@ graphSelectedDateExpenses: ${graphSelectedDateExpenses},
 graphSelectedDate: ${graphSelectedDate},
 selectedDate: ${selectedDate},
 tags: ${tags},
-thumbnailExpense: ${thumbnailExpense}
+thumbnailExpense: ${thumbnailExpense},
+limitMap: ${limitMap},
+isAutomatic: ${isAutomatic}
     ''';
   }
 }

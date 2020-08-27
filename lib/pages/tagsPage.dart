@@ -180,13 +180,23 @@ class TagsPage extends HookWidget {
                 color: Colors.white,
                 textColor: currentColor.value,
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.check_circle_outline,
-                  color: currentColor.value,
+              GestureDetector(
+                onTap: () async => addTagButtonPressed(),
+                child: Row(
+                  children: <Widget>[
+                    Text(
+                      'Confirm',
+                      style: TextStyle(
+                        color: currentColor.value,
+                      ),
+                    ),
+                    Icon(
+                      Icons.check_circle_outline,
+                      color: currentColor.value,
+                      size: 36,
+                    ),
+                  ],
                 ),
-                iconSize: 36,
-                onPressed: () async => addTagButtonPressed(),
               ),
             ],
           ),
@@ -198,25 +208,40 @@ class TagsPage extends HookWidget {
   Widget tagList() {
     return Observer(builder: (_) {
       return Container(
+        width: double.infinity,
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.grey[200],
         ),
-        child: ListView.builder(
-          itemCount: store.tags.length,
-          itemBuilder: (bc, index) {
-            Tag tag = store.tags[index];
-            return TagTile(tag: tag);
-          },
-        ),
+        child: store.tags.isNotEmpty
+            ? ListView.builder(
+                itemCount: store.tags.length,
+                itemBuilder: (bc, index) {
+                  Tag tag = store.tags[index];
+                  return TagTile(tag: tag);
+                },
+              )
+            : noTagsText(),
       );
     });
   }
 
+  Widget noTagsText() {
+    return Text(
+      'No Tag Has Added Yet!',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: 18,
+        color: Colors.black,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.2,
+      ),
+    );
+  }
   // #region LOGIC
 
   Future addTagButtonPressed() async {
-    if (nameController.text == null) return;
+    if (nameController.text.isEmpty) return;
     //DB and STORE
     Tag tag = await TagProvider.db.createTag(
       nameController.text,

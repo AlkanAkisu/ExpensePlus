@@ -233,6 +233,11 @@ class _GraphPageState extends State<GraphPage>
       },
     );
 
+    bool limitextended = totalExpenseOfTags > store.limitMap[type];
+    Color color = limitextended ? Colors.red[700] : Colors.black;
+    FontWeight fontWeight = limitextended ? FontWeight.w700 : FontWeight.w500;
+    double fontSize = limitextended ? 19 : 17;
+
     return SingleChildScrollView(
       child: entries.isEmpty
           ? Container()
@@ -244,14 +249,21 @@ class _GraphPageState extends State<GraphPage>
                   width: double.infinity,
                   margin: EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10)),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      width: 2,
+                      color: color,
+                    ),
+                  ),
                   child: Center(
                     child: Text(
-                      'Total Expense is $totalExpenseOfTags',
+                      'Total / Limit : $totalExpenseOfTags / ${store.limitMap[type]}',
                       style: TextStyle(
-                        fontSize: 16,
-                        letterSpacing: 0.75,
+                        fontSize: fontSize,
+                        fontWeight: fontWeight,
+                        color: color,
+                        letterSpacing: 1.2,
                       ),
                     ),
                   ),
