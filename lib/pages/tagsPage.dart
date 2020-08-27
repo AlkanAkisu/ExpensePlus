@@ -79,7 +79,7 @@ class TagsPage extends HookWidget {
                     height: kHeight + 20,
                   ),
                   Positioned.fill(
-                    top: 20,
+                    top: 25,
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
@@ -121,44 +121,6 @@ class TagsPage extends HookWidget {
         ),
       ),
     );
-  }
-
-  List<Widget> buttons() {
-    return [
-      Container(
-        child: IconButton(
-          icon: Icon(Icons.delete_sweep),
-          color: Colors.red,
-          iconSize: 36,
-          onPressed: () async {
-            await ExpenseProvider.db.deleteAll();
-            MobxStore.st.deleteAll();
-          },
-        ),
-      ),
-      Container(
-        child: IconButton(
-          icon: Icon(Icons.storage),
-          tooltip: 'Delete DB',
-          color: Colors.red,
-          iconSize: 36,
-          onPressed: () async {
-            await ExpenseProvider.db.deleteAll();
-          },
-        ),
-      ),
-      Container(
-        child: IconButton(
-          icon: Icon(Icons.store),
-          tooltip: 'Delete Store',
-          color: Colors.red,
-          iconSize: 36,
-          onPressed: () {
-            MobxStore.st.deleteAll();
-          },
-        ),
-      ),
-    ];
   }
 
   Widget tagAdder() {
@@ -204,43 +166,24 @@ class TagsPage extends HookWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              RaisedButton(
-                elevation: 3.0,
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        titlePadding: const EdgeInsets.all(0.0),
-                        contentPadding: const EdgeInsets.all(0.0),
-                        content: SingleChildScrollView(
-                          child: MaterialPicker(
-                            pickerColor: currentColor.value,
-                            onColorChanged: (color) {
-                              currentColor.value = color;
-                              Navigator.pop(context);
-                              FocusScope.of(context).unfocus();
-                            },
-                            enableLabel: true,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+              FlatButton(
+                onPressed: changeTagColorPressed,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                    side: BorderSide(color: currentColor.value)),
+                hoverColor: currentColor.value,
                 child: Text(
                   buttonName.value.isEmpty
                       ? 'Change Tag Color'
                       : buttonName.value,
                 ),
-                color: currentColor.value,
-                textColor: useWhiteForeground(currentColor.value)
-                    ? const Color(0xffffffff)
-                    : const Color(0xff000000),
+                color: Colors.white,
+                textColor: currentColor.value,
               ),
               IconButton(
                 icon: Icon(
-                  Icons.send,
+                  Icons.check_circle_outline,
+                  color: currentColor.value,
                 ),
                 iconSize: 36,
                 onPressed: () async => addTagButtonPressed(),
@@ -269,22 +212,50 @@ class TagsPage extends HookWidget {
       );
     });
   }
-  //LOGIC
+
+  // #region LOGIC
 
   Future addTagButtonPressed() async {
     if (nameController.text == null) return;
+    //DB and STORE
     Tag tag = await TagProvider.db.createTag(
       nameController.text,
       shortenController.text,
       currentColor.value.value,
     );
+    MobxStore.st.addTag(tag);
+
+    currentColor.value = Color(kDefaultColor.value);
+
+    buttonName.value = '';
 
     nameController.text = '';
     shortenController.text = '';
     FocusScope.of(context).unfocus();
-
-    //DB and STORE
-    MobxStore.st.addTag(tag);
-    //await ExpenseProvider.db.updateTags(tag);
   }
+
+  void changeTagColorPressed() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          titlePadding: const EdgeInsets.all(0.0),
+          contentPadding: const EdgeInsets.all(0.0),
+          content: SingleChildScrollView(
+            child: MaterialPicker(
+              pickerColor: currentColor.value,
+              onColorChanged: (color) {
+                currentColor.value = color;
+                Navigator.pop(context);
+                FocusScope.of(context).unfocus();
+              },
+              enableLabel: true,
+            ),
+          ),
+        );
+      },
+    );
+  }
+// #endregion
+
 }

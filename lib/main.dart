@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tracker_but_fast/pages/graphPage.dart';
+import 'package:tracker_but_fast/pages/settingsPage.dart';
 import 'package:tracker_but_fast/pages/tagsPage.dart';
 import 'package:tracker_but_fast/pages/trackPage.dart';
 
@@ -26,18 +27,16 @@ class _MyAppState extends State<MyApp> {
     Destination('Add Expense', Icons.attach_money, TrackPage()),
     Destination('Tags', Icons.bookmark_border, TagsPage()),
   ];
+  final navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'Tracker But Fast',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
         home: SafeArea(
           child: Scaffold(
-            appBar: appBar(),
+            appBar: appBar(context),
             bottomNavigationBar: SizedBox(
               height: 60,
               child: bottomNavigationBar(),
@@ -47,7 +46,7 @@ class _MyAppState extends State<MyApp> {
         ));
   }
 
-  AppBar appBar() {
+  AppBar appBar(BuildContext bc) {
     return AppBar(
       backgroundColor: Colors.grey[700],
       title: Text(
@@ -56,6 +55,18 @@ class _MyAppState extends State<MyApp> {
           fontSize: 20,
         ),
       ),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.settings),
+          onPressed: () {
+            navigatorKey.currentState.push(
+              MaterialPageRoute(
+                builder: (_) => SettingsPage(),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -88,5 +99,4 @@ class _MyAppState extends State<MyApp> {
       }).toList(),
     );
   }
-
 }

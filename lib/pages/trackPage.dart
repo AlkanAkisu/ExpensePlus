@@ -63,11 +63,9 @@ class _TrackPageState extends State<TrackPage> {
       if (this.mounted && visible && calendarHeight > 0)
         setState(() {
           calendarHeight = 0;
-          print('sestate1');
         });
       if (this.mounted && !visible && showThumbnail)
         setState(() {
-          print('sestate2');
           //TODO text memory do controller.text = oldtext when click back
           hideTotalPrice = false;
           showThumbnail = false;
@@ -85,9 +83,7 @@ class _TrackPageState extends State<TrackPage> {
               print('Database value ==> is empty');
             } else {
               store.addAllExpenses(expenses);
-              setState(() {
-                print('sestate3');
-              });
+              setState(() {});
             }
           });
         // print('store tags => ${store.tags}');
@@ -139,9 +135,7 @@ class _TrackPageState extends State<TrackPage> {
                 selectedDate = new DateTime(day.year, day.month, day.day);
                 store.updateSelectedDate(selectedDate);
                 calendarHeight = 0;
-                setState(() {
-                  print('sestate4');
-                });
+                setState(() {});
               },
             );
           },
@@ -155,7 +149,10 @@ class _TrackPageState extends State<TrackPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.blue[700],
+          ),
           onPressed: calendarHeight != 0
               ? null
               : () {
@@ -171,9 +168,9 @@ class _TrackPageState extends State<TrackPage> {
               padding: const EdgeInsets.all(4.0),
               margin: const EdgeInsets.only(top: 4),
               decoration: BoxDecoration(
-                color: Colors.grey[400],
+                // color: Colors.grey[400],
                 border: Border.all(
-                  color: Colors.black,
+                  color: Colors.blue[700],
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -194,6 +191,7 @@ class _TrackPageState extends State<TrackPage> {
                             '${date.day}/${date.month}/${date.year}',
                             textAlign: TextAlign.center,
                             style: TextStyle(
+                              color: Colors.blue[700],
                               fontSize: 20,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 1.5,
@@ -207,6 +205,7 @@ class _TrackPageState extends State<TrackPage> {
                         calendarHeight == 0
                             ? Icons.arrow_drop_down
                             : Icons.arrow_drop_up,
+                        color: Colors.blue[700],
                       ),
                       onPressed: () async => calendarButtonPressed(),
                     )
@@ -215,7 +214,10 @@ class _TrackPageState extends State<TrackPage> {
               )),
         ),
         IconButton(
-          icon: Icon(Icons.arrow_forward),
+          icon: Icon(
+            Icons.arrow_forward,
+            color: Colors.blue[700],
+          ),
           onPressed: calendarHeight != 0
               ? null
               : () {
@@ -352,9 +354,8 @@ class _TrackPageState extends State<TrackPage> {
         padding: const EdgeInsets.all(4.0),
         margin: const EdgeInsets.only(bottom: 5),
         decoration: BoxDecoration(
-          color: Colors.grey[400],
           border: Border.all(
-            color: Colors.black,
+            color: Colors.blue[700],
             width: 2,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -369,6 +370,7 @@ class _TrackPageState extends State<TrackPage> {
                 fontSize: 19,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 1.2,
+                color: Colors.blue[700],
               ),
             ),
           ],
@@ -409,15 +411,12 @@ class _TrackPageState extends State<TrackPage> {
             hideTotalPrice = true;
             if (calendarHeight == null)
               setState(() {
-                print('sestate5');
                 calendarHeight = 0;
               });
 
             if (!showThumbnail) {
               showThumbnail = true;
-              setState(() {
-                print('sestate6');
-              });
+              setState(() {});
             }
           },
           focusNode: focusNode,
@@ -433,9 +432,13 @@ class _TrackPageState extends State<TrackPage> {
             letterSpacing: 1.6,
           ),
           decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              //focusedBorder: UnderlineInputBorder(),
-              hintText: 'Enter a expense'),
+            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            //focusedBorder: UnderlineInputBorder(),
+            hintText: 'Enter a expense',
+            hintStyle: TextStyle(
+                // color: Colors.white.withOpacity(0.8),
+                ),
+          ),
         ),
       ),
     );
@@ -443,7 +446,7 @@ class _TrackPageState extends State<TrackPage> {
 
   //
   //--------------LOGIC--------------
-  //
+  // #region Logic
 
   void textFieldSubmitted(TextEditingController controller) async {
     Expense regexExpense =
@@ -475,9 +478,7 @@ class _TrackPageState extends State<TrackPage> {
     }
     showThumbnail = false;
     hideTotalPrice = false;
-    setState(() {
-      print('sestate7');
-    });
+    setState(() {});
   }
 
   void deleteButtonPressed(int id) {
@@ -522,9 +523,7 @@ class _TrackPageState extends State<TrackPage> {
       duration: Duration(milliseconds: 500),
     );
     store.deleteExpense(expense);
-    setState(() {
-      print('sestate9');
-    });
+    setState(() {});
   }
 
   void editButtonPressed(int id) {
@@ -554,9 +553,7 @@ class _TrackPageState extends State<TrackPage> {
       calendarHeight = null;
     else
       calendarHeight = 0;
-    setState(() {
-      print('sestate8');
-    });
+    setState(() {});
   }
 
   bool isSelectedDate(Expense exp) {
@@ -564,4 +561,6 @@ class _TrackPageState extends State<TrackPage> {
         exp.date.month == store.selectedDate.month &&
         exp.date.day == store.selectedDate.day;
   }
+// #endregion
+
 }

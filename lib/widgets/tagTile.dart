@@ -30,7 +30,10 @@ class TagTile extends StatelessWidget {
       ),
       padding: EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: tag.color,
+        border: Border.all(
+          color: tag.color,
+          width: 1.5
+        ),
         borderRadius: BorderRadius.circular(3),
       ),
       child: Text(
@@ -38,7 +41,7 @@ class TagTile extends StatelessWidget {
         style: TextStyle(
           fontSize: 18,
           letterSpacing: 1,
-          color: useWhiteForeground(tag.color) ? Colors.white : Colors.black,
+          color: tag.color,
         ),
       ),
     );

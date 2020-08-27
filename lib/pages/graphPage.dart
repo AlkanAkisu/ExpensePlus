@@ -12,7 +12,7 @@ class GraphPage extends StatefulWidget {
   _GraphPageState createState() => _GraphPageState();
 }
 
-enum TabViewType { Day, Week, Month }
+enum ViewType { Day, Week, Month }
 
 class _GraphPageState extends State<GraphPage>
     with SingleTickerProviderStateMixin {
@@ -28,10 +28,9 @@ class _GraphPageState extends State<GraphPage>
       DateTime.now().month,
       DateTime.now().day,
     );
-    if (store.graphSelectedDate == null)
-      store.updateGraphSelectedDate(today);
-    else
-      store.updateGraphSelectedDate(store.graphSelectedDate);
+    print(store.graphSelectedDate);
+    store.updateGraphSelectedDate(store.graphSelectedDate ?? today);
+
     _controller = new TabController(length: 3, vsync: this);
   }
 
@@ -61,13 +60,14 @@ class _GraphPageState extends State<GraphPage>
         calendarController: calendarController,
         startingDayOfWeek: StartingDayOfWeek.monday,
         rowHeight: 55,
-        initialSelectedDay: DateTime.now(),
+        initialSelectedDay: store.graphSelectedDate ?? DateTime.now(),
         availableGestures: AvailableGestures.horizontalSwipe,
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
         ),
         onDaySelected: (day, events) {
           store.updateGraphSelectedDate(day);
+          store.updateSelectedDate(day);
         },
         builders: CalendarBuilders(
           selectedDayBuilder: (context, date, events) {
@@ -175,22 +175,22 @@ class _GraphPageState extends State<GraphPage>
         child: Column(
           children: <Widget>[
             Container(
-              decoration: new BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.grey[400],
               ),
-              child: new TabBar(
+              child: TabBar(
                 controller: _controller,
                 tabs: [
-                  new Tab(
-                    icon: const Icon(Icons.view_day),
+                  Tab(
+                    icon: Icon(Icons.view_day),
                     text: 'Day',
                   ),
-                  new Tab(
-                    icon: const Icon(Icons.view_week),
+                  Tab(
+                    icon: Icon(Icons.view_week),
                     text: 'Week',
                   ),
-                  new Tab(
-                    icon: const Icon(Icons.view_comfy),
+                  Tab(
+                    icon: Icon(Icons.view_comfy),
                     text: 'Month',
                   ),
                 ],
@@ -202,13 +202,13 @@ class _GraphPageState extends State<GraphPage>
                 controller: _controller,
                 children: <Widget>[
                   tabViewElement(
-                    TabViewType.Day,
+                    ViewType.Day,
                   ),
                   tabViewElement(
-                    TabViewType.Week,
+                    ViewType.Week,
                   ),
                   tabViewElement(
-                    TabViewType.Month,
+                    ViewType.Month,
                   ),
                 ],
               ),
@@ -220,7 +220,7 @@ class _GraphPageState extends State<GraphPage>
   }
 
   Widget tabViewElement(
-    TabViewType type,
+    ViewType type,
   ) {
     var tags = store.getTagTotalGraph(store.graphSelectedDateExpenses[type]);
     var entries = tags.entries.toList();
