@@ -44,7 +44,11 @@ class Regex {
 
   ///input [str] for regex
   /// returns tags, prices and isLimit
-  static Future<Expense> doRegex(String str, DateTime selectedDate) async {
+  static Future<Expense> doRegex(
+    String str,
+    DateTime selectedDate,
+    bool submitted,
+  ) async {
     String text = str;
     //Todo implement more than one expense at once
     String name;
@@ -61,15 +65,17 @@ class Regex {
     str = str.replaceAll(priceRegex, '');
 
     if (tagRegex.allMatches(str).isEmpty) tags = [Tag.other()];
+
     for (final el in tagRegex.allMatches(str)) {
       Tag tag = MobxStore.st.getTagByName(el[0]);
-      
       if (tag == null) {
         tag = new Tag(
           name: el[0],
         );
-        await TagProvider.db.addTag(tag);
-        MobxStore.st.addTag(tag);
+        if (submitted) {
+          await TagProvider.db.addTag(tag);
+          MobxStore.st.addTag(tag);
+        }
       }
       tags.add(tag);
       // print('REGEX:\t tags list $tag ');

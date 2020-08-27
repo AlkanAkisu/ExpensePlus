@@ -1,10 +1,12 @@
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:tracker_but_fast/database/expense_provider.dart';
 import 'package:tracker_but_fast/database/tag_provider.dart';
 import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:tracker_but_fast/models/tag.dart';
+import 'package:tracker_but_fast/widgets/tagTile.dart';
 
 class TagsPage extends HookWidget {
   BuildContext context;
@@ -14,33 +16,107 @@ class TagsPage extends HookWidget {
   TextEditingController shortenController = new TextEditingController();
   final store = MobxStore.st;
   FocusNode focusNode;
+  final Color kDefaultColor = Colors.blue[500];
 
   @override
   Widget build(BuildContext context) {
-    currentColor = useState(Color(Colors.red[300].value));
+    currentColor = useState(Color(kDefaultColor.value));
     buttonName = useState('Change Tag Color');
     this.context = context;
-
+    double kHeight = 40.0;
 
     return Scaffold(
-      body: Center(
-        child: SafeArea(
-          child: Container(
-            color: const Color(0xfff9f9f9),
-            child: SingleChildScrollView(
-              child: Column(
+      body: SafeArea(
+        child: Container(
+          height: double.infinity,
+          color: const Color(0xfff9f9f9),
+          child: Column(
+            children: <Widget>[
+              Stack(
                 children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: buttons(),
+                  Container(
+                    width: double.infinity,
+                    height: kHeight + 20,
                   ),
-                  SizedBox(
-                    height: 30,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                    ),
+                    width: double.infinity,
+                    height: kHeight,
                   ),
-                  tagAdder()
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                            color: kDefaultColor,
+                            borderRadius: BorderRadius.circular(5)),
+                        width: 150,
+                        height: 50,
+                        child: Center(
+                          child: Text(
+                            'ADD TAG',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                letterSpacing: 1.5,
+                                color: Colors.white.withOpacity(0.8)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
+              tagAdder(),
+              Stack(
+                children: <Widget>[
+                  Container(
+                    height: kHeight + 20,
+                  ),
+                  Positioned.fill(
+                    top: 20,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                            color: kDefaultColor,
+                            borderRadius: BorderRadius.circular(5)),
+                        width: 150,
+                        height: 50,
+                        child: Center(
+                          child: Text(
+                            'TAGS',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 18,
+                                letterSpacing: 1.5,
+                                color: Colors.white.withOpacity(0.8)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: tagList(),
+              ),
+            ],
           ),
         ),
       ),
@@ -87,86 +163,112 @@ class TagsPage extends HookWidget {
 
   Widget tagAdder() {
     return Container(
+      margin: EdgeInsets.symmetric(vertical: 20),
       child: Column(
         children: <Widget>[
-          Container(
-            width: 200,
-            height: 100,
-            child: TextField(
-              textInputAction: TextInputAction.send,
-              controller: nameController,
-              decoration: InputDecoration(
-                  hintText: 'Tag Name (e.g. travel)',
-                  floatingLabelBehavior: FloatingLabelBehavior.auto),
-              onChanged: (str) {
-                buttonName.value = str;
-                focusNode.requestFocus();
-              },
-            ),
-          ),
-          Container(
-            width: 200,
-            height: 100,
-            child: TextField(
-              focusNode: focusNode,
-              controller: shortenController,
-              decoration: InputDecoration(
-                hintText: 'Short Name (e.g. t)',
-                floatingLabelBehavior: FloatingLabelBehavior.auto,
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 25),
+                  width: 200,
+                  child: TextField(
+                    textInputAction: TextInputAction.send,
+                    controller: nameController,
+                    decoration: InputDecoration(
+                        hintText: 'Tag Name (e.g. travel)',
+                        floatingLabelBehavior: FloatingLabelBehavior.auto),
+                    onChanged: (str) {
+                      buttonName.value = str;
+                      focusNode.requestFocus();
+                    },
+                  ),
+                ),
               ),
-            ),
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 25),
+                  width: 200,
+                  child: TextField(
+                    focusNode: focusNode,
+                    controller: shortenController,
+                    decoration: InputDecoration(
+                      hintText: 'Short Name (e.g. t)',
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          Center(
-            child: RaisedButton(
-              elevation: 3.0,
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      titlePadding: const EdgeInsets.all(0.0),
-                      contentPadding: const EdgeInsets.all(0.0),
-                      content: SingleChildScrollView(
-                        child: MaterialPicker(
-                          pickerColor: currentColor.value,
-                          onColorChanged: (color) {
-                            currentColor.value = color;
-                            Navigator.pop(context);
-                            FocusScope.of(context).unfocus();
-                          },
-                          enableLabel: true,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              RaisedButton(
+                elevation: 3.0,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        titlePadding: const EdgeInsets.all(0.0),
+                        contentPadding: const EdgeInsets.all(0.0),
+                        content: SingleChildScrollView(
+                          child: MaterialPicker(
+                            pickerColor: currentColor.value,
+                            onColorChanged: (color) {
+                              currentColor.value = color;
+                              Navigator.pop(context);
+                              FocusScope.of(context).unfocus();
+                            },
+                            enableLabel: true,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
-              child: Text(
-                buttonName.value.isEmpty
-                    ? 'Change Tag Color'
-                    : buttonName.value,
+                      );
+                    },
+                  );
+                },
+                child: Text(
+                  buttonName.value.isEmpty
+                      ? 'Change Tag Color'
+                      : buttonName.value,
+                ),
+                color: currentColor.value,
+                textColor: useWhiteForeground(currentColor.value)
+                    ? const Color(0xffffffff)
+                    : const Color(0xff000000),
               ),
-              color: currentColor.value,
-              textColor: useWhiteForeground(currentColor.value)
-                  ? const Color(0xffffffff)
-                  : const Color(0xff000000),
-            ),
-          ),
-          SizedBox(
-            height: 50,
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.send,
-            ),
-            iconSize: 36,
-            onPressed: () async => addTagButtonPressed(),
+              IconButton(
+                icon: Icon(
+                  Icons.send,
+                ),
+                iconSize: 36,
+                onPressed: () async => addTagButtonPressed(),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
+  Widget tagList() {
+    return Observer(builder: (_) {
+      return Container(
+        padding: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+        ),
+        child: ListView.builder(
+          itemCount: store.tags.length,
+          itemBuilder: (bc, index) {
+            Tag tag = store.tags[index];
+            return TagTile(tag: tag);
+          },
+        ),
+      );
+    });
+  }
   //LOGIC
 
   Future addTagButtonPressed() async {

@@ -235,7 +235,10 @@ class _TrackPageState extends State<TrackPage> {
     return Expanded(
         child: Container(
       margin: const EdgeInsets.symmetric(vertical: 5),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey[200],
+      ),
       child: listViewExpenses(),
     ));
   }
@@ -277,20 +280,20 @@ class _TrackPageState extends State<TrackPage> {
               child: FadeTransition(
                 opacity: anim,
                 child: Container(
-
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                   decoration: BoxDecoration(
                       border: Border.all(
                         color: Colors.black,
-                        width: 2,
+                        width: 1,
                       ),
                       // borderRadius: BorderRadius.circular(6),
                       color: Colors.grey[50],
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black87,
+                          color: Colors.black54,
                           offset: Offset(0, 1),
-                          blurRadius: 2,
+                          blurRadius: 1,
                         )
                       ]),
                   child: ExpenseTile(
@@ -394,7 +397,11 @@ class _TrackPageState extends State<TrackPage> {
         child: TextField(
           onChanged: (text) async {
             store.setThumbnailExpense(
-              await Regex.doRegex(text, store.selectedDate),
+              await Regex.doRegex(
+                text,
+                store.selectedDate,
+                false,
+              ),
             );
           },
           onTap: () async {
@@ -439,10 +446,8 @@ class _TrackPageState extends State<TrackPage> {
   //
 
   void textFieldSubmitted(TextEditingController controller) async {
-    Expense regexExpense = await Regex.doRegex(
-      controller.text,
-      store.selectedDate,
-    );
+    Expense regexExpense =
+        await Regex.doRegex(controller.text, store.selectedDate, true);
     print('regexExpense:\t $regexExpense');
     showThumbnail = false;
     store.thumbnailExpense = null;
