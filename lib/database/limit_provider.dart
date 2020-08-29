@@ -60,7 +60,7 @@ class LimitProvider {
       ViewType.Week: val['week'],
       ViewType.Month: val['month'],
     };
-    print(rv);
+
     return rv;
   }
 
@@ -77,7 +77,32 @@ class LimitProvider {
     final val = await _limitStore.record(1).get(
           await database,
         );
-    if (val == null) return null;
+    if (val == null) {
+      await updateIsAutomatic(true);
+      return true;
+    }
     return val['isAutomatic'];
+  }
+
+  //USE LIMIT
+  Future<void> updateUseLimit(bool useLimit) async {
+    await _limitStore.record(2).put(
+      await database,
+      {
+        'useLimit': useLimit,
+      },
+    );
+  }
+
+  Future<bool> getUseLimit() async {
+    final val = await _limitStore.record(2).get(
+          await database,
+        );
+
+    if (val == null) {
+      await updateUseLimit(false);
+      return false;
+    }
+    return val['useLimit'];
   }
 }

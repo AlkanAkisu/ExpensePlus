@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -16,6 +15,7 @@ import 'package:tracker_but_fast/utilities/dummy_data.dart';
 import 'package:tracker_but_fast/utilities/regex.dart';
 import 'package:tracker_but_fast/widgets/expenseTile.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:tracker_but_fast/models/tag.dart';
 
 class TrackPage extends StatefulWidget {
   @override
@@ -38,7 +38,7 @@ class _TrackPageState extends State<TrackPage> {
   List<Expense> selectedDateExpenses;
 
   Expense thumbnailExpense;
-  bool showThumbnail = false, isKeyboardActive = false, hideTotalPrice = false;
+  bool showThumbnail = false, isKeyboardActive = false;
 
   @override
   void dispose() {
@@ -51,6 +51,8 @@ class _TrackPageState extends State<TrackPage> {
   @override
   void initState() {
     super.initState();
+    editing = <Expense>{};
+    print('track init');
     this.listKey = widget.listKey;
     now = DateTime.now();
     selectedDate = DateTime(now.year, now.month, now.day);
@@ -69,37 +71,11 @@ class _TrackPageState extends State<TrackPage> {
       if (this.mounted && !visible && showThumbnail)
         setState(() {
           //TODO text memory do controller.text = oldtext when click back
-          hideTotalPrice = false;
           showThumbnail = false;
           store.thumbnailExpense = null;
           FocusScope.of(focusNode.context).unfocus();
         });
     });
-
-    if (store.tags.isEmpty)
-      TagProvider.db.getAllTags().then((tags) {
-        store.addAllTags(tags);
-        if (store.expenses.isEmpty)
-          ExpenseProvider.db.getAllExpenses().then((expenses) {
-            if (expenses.isEmpty) {
-              print('Database value ==> is empty');
-            } else {
-              store.addAllExpenses(expenses);
-              setState(() {});
-            }
-          });
-        // print('store tags => ${store.tags}');
-      });
-
-    if (store.limitMap.isEmpty)
-      LimitProvider.db.getLimit().then((limit) {
-        store.limitMap = limit;
-      });
-
-    if (store.isAutomatic == null)
-      LimitProvider.db.getIsAutomatic().then((isAuto) {
-        store.isAutomatic = isAuto ?? false;
-      });
   }
 
   @override
@@ -258,68 +234,83 @@ class _TrackPageState extends State<TrackPage> {
   }
 
   Widget listViewExpenses() {
-    return Observer(builder: (_) {
-      store.selectedDate;
-      List<Expense> selectedDateExpenses = store.selectedDateExpenses;
+    return Observer(
+      builder: (_) {
+        store.selectedDate;
+        List<Expense> selectedDateExpenses = store.selectedDateExpenses;
 
-      return new AnimatedList(
-        key: listKey,
-        initialItemCount:
-            100, // needs to be higher because we change the item count
-        itemBuilder: (bc, i, anim) {
-          if (selectedDateExpenses.length <= i) return null;
+        return new AnimatedList(
+          key: listKey,
+          initialItemCount:
+              100, // needs to be higher because we change the item count
+          itemBuilder: (bc, i, anim) {
+            if (selectedDateExpenses.length <= i) return null;
 
-          Expense expense = selectedDateExpenses[i];
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 2),
-            child: Slidable(
-              actionPane: SlidableStrechActionPane(),
-              direction: Axis.horizontal,
-              actions: <Widget>[
-                IconSlideAction(
-                  caption: 'Edit',
-                  color: Colors.blue,
-                  icon: Icons.edit,
-                  onTap: () => editButtonPressed(expense.id),
-                ),
-              ],
-              secondaryActions: <Widget>[
-                IconSlideAction(
-                  caption: 'Delete',
-                  color: Colors.red,
-                  icon: Icons.delete,
-                  onTap: () => deleteButtonPressed(expense.id),
-                ),
-              ],
-              child: FadeTransition(
-                opacity: anim,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 1,
-                      ),
-                      // borderRadius: BorderRadius.circular(6),
-                      color: Colors.grey[50],
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black54,
-                          offset: Offset(0, 1),
-                          blurRadius: 1,
-                        )
-                      ]),
-                  child: ExpenseTile(
-                    expense: expense,
+            Expense expense = selectedDateExpenses[i];
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 2),
+              child: Slidable(
+                actionPane: SlidableStrechActionPane(),
+                direction: Axis.horizontal,
+                actions: <Widget>[
+                  IconSlideAction(
+                    caption: 'Edit',
+                    color: Colors.blue,
+                    icon: Icons.edit,
+                    onTap: () => editButtonPressed(expense.id),
+                  ),
+                ],
+                secondaryActions: <Widget>[
+                  IconSlideAction(
+                    caption: 'Delete',
+                    color: Colors.red,
+                    icon: Icons.delete,
+                    onTap: () => deleteButtonPressed(expense.id),
+                  ),
+                ],
+                child: FadeTransition(
+                  opacity: anim,
+                  child: Container(
+                    decoration: BoxDecoration(
+                        // borderRadius: BorderRadius.circular(6),
+                        color: Colors.grey[50],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black54,
+                            offset: Offset(0, 1.5),
+                            blurRadius: 1,
+                          )
+                        ]),
+                    child: Row(
+                      children: <Widget>[
+                        Container(
+                          width: 5,
+                          height: 92,
+                          child: Column(
+                            children: expense.tags
+                                .map(
+                                  (tag) => Expanded(
+                                    child: Container(color: tag.color),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                        Expanded(
+                          child: ExpenseTile(
+                            expense: expense,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
-      );
-    });
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget thumbnailWidget() {
@@ -329,27 +320,45 @@ class _TrackPageState extends State<TrackPage> {
         var thumbnailExpense = store.thumbnailExpense;
         if (showThumbnail) {
           return Container(
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                  width: 1,
-                ),
+            decoration: BoxDecoration(
+                // borderRadius: BorderRadius.circular(6),
+                color: Colors.grey[50],
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black87,
-                    blurRadius: 5,
-                    offset: Offset(0, 2),
+                    color: Colors.black54,
+                    offset: Offset(0, 1.5),
+                    blurRadius: 1,
                   )
-                ],
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.grey[50],
-              ),
-              child: ExpenseTile(
-                expense: thumbnailExpense,
-                isThumbnail: true,
-              ));
+                ]),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: 10,
+                  height: 92,
+                  child: Column(
+                    children: thumbnailExpense?.tags
+                            ?.map(
+                              (tag) => Expanded(
+                                child: Container(color: tag.color),
+                              ),
+                            )
+                            ?.toList() ??
+                        [
+                          Expanded(
+                            child: Container(color: Tag.otherTag.color),
+                          ),
+                        ],
+                  ),
+                ),
+                Expanded(
+                  child: ExpenseTile(
+                    expense: thumbnailExpense,
+                    isThumbnail: true,
+                  ),
+                ),
+              ],
+            ),
+          );
         } else {
           return Container();
         }
@@ -362,10 +371,18 @@ class _TrackPageState extends State<TrackPage> {
       store.selectedDate;
       store.limitMap;
 
+
       var totalPrice = store.getSelectedDateTotalPrice();
 
       //text styles
-      bool limitextended = totalPrice > store.limitMap[ViewType.Day];
+      bool limitextended;
+      bool isUseLimit =
+          store.limitMap[ViewType.Day] != null && store.isUseLimit;
+
+      if (isUseLimit)
+        limitextended = totalPrice > store.limitMap[ViewType.Day];
+      else
+        limitextended = false;
       Color color = limitextended ? Colors.red[700] : Colors.blue[700];
       FontWeight fontWeight = limitextended ? FontWeight.w700 : FontWeight.w500;
       double fontSize = limitextended ? 21 : 19;
@@ -380,12 +397,14 @@ class _TrackPageState extends State<TrackPage> {
           ),
           borderRadius: BorderRadius.circular(12),
         ),
-        height: hideTotalPrice ? 0 : 60,
+        height: 60,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'Total / Limit : $totalPrice / ${store.limitMap[ViewType.Day]}',
+              isUseLimit
+                  ? 'Total / Limit : $totalPrice / ${store.limitMap[ViewType.Day]}'
+                  : 'Total Expense : $totalPrice ',
               style: TextStyle(
                 fontSize: fontSize,
                 fontWeight: fontWeight,
@@ -428,7 +447,7 @@ class _TrackPageState extends State<TrackPage> {
           },
           onTap: () async {
             if (editing.isNotEmpty) return;
-            hideTotalPrice = true;
+
             if (calendarHeight == null)
               setState(() {
                 calendarHeight = 0;
@@ -454,7 +473,8 @@ class _TrackPageState extends State<TrackPage> {
           decoration: InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               hintText: 'Enter a expense',
-              helperText: 'Use . as a prefix to add tag '),
+              helperText:
+                  ' . prefix to add tag (.travel .food) or shorten it (.t .f)'),
         ),
       ),
     );
@@ -465,8 +485,11 @@ class _TrackPageState extends State<TrackPage> {
   // #region Logic
 
   void textFieldSubmitted(TextEditingController controller) async {
-    Expense regexExpense =
-        await Regex.doRegex(controller.text, store.selectedDate, true);
+    Expense regexExpense = await Regex.doRegex(
+      controller.text,
+      store.selectedDate,
+      true,
+    );
     print('regexExpense:\t $regexExpense');
     showThumbnail = false;
     store.thumbnailExpense = null;
@@ -493,7 +516,7 @@ class _TrackPageState extends State<TrackPage> {
         listKey.currentState.insertItem(store.selectedDateExpenses.length - 1);
     }
     showThumbnail = false;
-    hideTotalPrice = false;
+
     setState(() {});
   }
 
@@ -547,15 +570,14 @@ class _TrackPageState extends State<TrackPage> {
       (element) => element.id == id,
     );
 
-    // print('Expense Text : ${expense.text}');
     editing = {expense};
     focusNode.requestFocus();
 
-    print('editing $editing');
-
     controller.text = expense.text;
 
-    // print('Controller text : ${controller.text}');
+    showThumbnail = true;
+
+    store.thumbnailExpense = expense;
   }
 
   Future calendarButtonPressed() async {

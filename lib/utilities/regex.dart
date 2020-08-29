@@ -50,7 +50,7 @@ class Regex {
     bool submitted,
   ) async {
     String text = str;
-    //Todo implement more than one expense at once
+
     String name;
     List<Tag> tags = new List();
     List<double> prices = new List();
@@ -78,14 +78,14 @@ class Regex {
         }
       }
       tags.add(tag);
-      // print('REGEX:\t tags list $tag ');
+
     }
 
     str = str.replaceAll(tagRegex, '');
 
-    //print('found match ${dateRegex.allMatches(str).length}');
+
     dateRegex.allMatches(str).forEach((el) {
-      //print('Regex Groups => ${el.groups([1, 2, 3, 4, 5])}');
+
       //#29 #9.12 style
       if (el[5] != null) {
         final map = el[5].split('.').asMap();
@@ -104,7 +104,7 @@ class Regex {
         };
 
         date = dateFormatter(map);
-        // print('How Many:$howMany\t Keyword:$keyword\t Date:$date');
+
       }
     });
     date ??= selectedDate;
@@ -119,7 +119,7 @@ class Regex {
     str = str.replaceAll(new RegExp(r'[\.|#]+'), '');
     str = str.trim();
 
-    //todo TEST IT
+
     name = str.isEmpty ? tags.map((e) => e.name).join(' ') : str;
     prices = prices.isEmpty ? [0] : prices;
 

@@ -1,7 +1,7 @@
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:tracker_but_fast/database/expense_provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tracker_but_fast/database/tag_provider.dart';
 import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -17,19 +17,30 @@ class TagsPage extends HookWidget {
   final store = MobxStore.st;
   FocusNode focusNode;
   final Color kDefaultColor = Colors.blue[500];
+  FToast fToast;
+  String conflict, confirmButtonName = 'Add';
 
   @override
   Widget build(BuildContext context) {
+    if (fToast == null) fToast = new FToast(context);
     currentColor = useState(Color(kDefaultColor.value));
     buttonName = useState('Change Tag Color');
     this.context = context;
     double kHeight = 40.0;
 
+    useEffect(
+        () => () {
+              store.editTag = null;
+              nameController.text = '';
+              shortenController.text = '';
+            },
+        []);
+
     return Scaffold(
       body: SafeArea(
         child: Container(
           height: double.infinity,
-          color: const Color(0xfff9f9f9),
+          color: Color(0xfff9f9f9),
           child: Column(
             children: <Widget>[
               Stack(
@@ -124,84 +135,102 @@ class TagsPage extends HookWidget {
   }
 
   Widget tagAdder() {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        children: <Widget>[
-          Row(
+    return Observer(
+      builder: (_) {
+        store.editTag;
+        store.tags;
+
+        return Container(
+          margin: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
             children: <Widget>[
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 25),
-                  width: 200,
-                  child: TextField(
-                    textInputAction: TextInputAction.send,
-                    controller: nameController,
-                    decoration: InputDecoration(
-                        hintText: 'Tag Name (e.g. travel)',
-                        floatingLabelBehavior: FloatingLabelBehavior.auto),
-                    onChanged: (str) {
-                      buttonName.value = str;
-                      focusNode.requestFocus();
-                    },
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 25),
-                  width: 200,
-                  child: TextField(
-                    focusNode: focusNode,
-                    controller: shortenController,
-                    decoration: InputDecoration(
-                      hintText: 'Short Name (e.g. t)',
-                      floatingLabelBehavior: FloatingLabelBehavior.auto,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              FlatButton(
-                onPressed: changeTagColorPressed,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                    side: BorderSide(color: currentColor.value)),
-                hoverColor: currentColor.value,
-                child: Text(
-                  buttonName.value.isEmpty
-                      ? 'Change Tag Color'
-                      : buttonName.value,
-                ),
-                color: Colors.white,
-                textColor: currentColor.value,
-              ),
-              GestureDetector(
-                onTap: () async => addTagButtonPressed(),
-                child: Row(
-                  children: <Widget>[
-                    Text(
-                      'Confirm',
-                      style: TextStyle(
-                        color: currentColor.value,
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 25),
+                      width: 200,
+                      child: TextField(
+                        textInputAction: TextInputAction.send,
+                        controller: nameController,
+                        decoration: InputDecoration(
+                            hintText: 'Tag Name (e.g. travel)',
+                            floatingLabelBehavior: FloatingLabelBehavior.auto),
+                        onChanged: (str) {
+                          buttonName.value = str;
+                          conflictChecker(str);
+                          focusNode.requestFocus();
+                        },
                       ),
                     ),
-                    Icon(
-                      Icons.check_circle_outline,
-                      color: currentColor.value,
-                      size: 36,
+                  ),
+                  Expanded(
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 25),
+                      width: 200,
+                      child: TextField(
+                        focusNode: focusNode,
+                        controller: shortenController,
+                        decoration: InputDecoration(
+                          hintText: 'Short Name (e.g. t)',
+                          floatingLabelBehavior: FloatingLabelBehavior.auto,
+                        ),
+                        onChanged: (str) {
+                          conflictChecker(str);
+                        },
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  FlatButton(
+                    onPressed: changeTagColorPressed,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                        side: BorderSide(color: currentColor.value)),
+                    hoverColor: currentColor.value,
+                    child: Text(
+                      buttonName.value.isEmpty
+                          ? 'Change Tag Color'
+                          : buttonName.value,
+                    ),
+                    color: Colors.white,
+                    textColor: currentColor.value,
+                  ),
+                  FlatButton(
+                    color: currentColor.value.withOpacity(0.1),
+                    onPressed: () async => addTagButtonPressed(),
+                    splashColor: currentColor.value.withOpacity(0.5),
+                    child: Container(
+                      padding: EdgeInsets.all(3),
+                      child: Row(
+                        children: <Widget>[
+                          Text(
+                            confirmButtonName ?? 'Add',
+                            style: TextStyle(
+                              color: currentColor.value,
+                            ),
+                          ),
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: currentColor.value,
+                            size: 36,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              conflictText(),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -218,7 +247,10 @@ class TagsPage extends HookWidget {
                 itemCount: store.tags.length,
                 itemBuilder: (bc, index) {
                   Tag tag = store.tags[index];
-                  return TagTile(tag: tag);
+                  return TagTile(
+                    tag: tag,
+                    editButtonCallback: editButtonPressed,
+                  );
                 },
               )
             : noTagsText(),
@@ -228,7 +260,7 @@ class TagsPage extends HookWidget {
 
   Widget noTagsText() {
     return Text(
-      'No Tag Has Added Yet!',
+      'No Tag Has Been Added Yet!',
       textAlign: TextAlign.center,
       style: TextStyle(
         fontSize: 18,
@@ -238,6 +270,38 @@ class TagsPage extends HookWidget {
       ),
     );
   }
+
+  Widget conflictText() {
+    String name = nameController.text;
+    String short = shortenController.text;
+
+    //editing bug fix
+    if (store.editTag == null) {
+      conflict = null;
+      conflict = (store.getTagByName(name) ?? store.getTagByName(short))?.name;
+    }
+
+    if (conflict == null) return Container();
+    return Text(
+      'Conflict on $conflict',
+    );
+  }
+
+  conflictChecker(String str) {
+    conflict = null;
+    var name = store.getTagByName(str)?.name;
+    if (store.editTag != null && name != null) {
+      if (name != store.editTag.name) {
+        conflict = name;
+      }
+    } else if (store.editTag == null) conflict = name;
+
+    confirmButtonName = 'Add';
+    if (conflict != null || store.editTag != null) {
+      confirmButtonName = 'Update';
+    }
+  }
+
   // #region LOGIC
 
   Future addTagButtonPressed() async {
@@ -248,7 +312,41 @@ class TagsPage extends HookWidget {
       shortenController.text,
       currentColor.value.value,
     );
-    MobxStore.st.addTag(tag);
+    String msg = 'Tag has been added';
+    Color color = Colors.green[400];
+    bool update = false;
+
+    if (conflict != null || store.editTag != null) {
+      msg = 'Tag has been updated';
+      color = Colors.blue[400];
+      update = true;
+    }
+
+    Fluttertoast.showToast(
+      msg: msg,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: color,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+
+    if (conflict != null && store.editTag != null) {
+      tag.id = store.getTagByName(conflict).id;
+      MobxStore.st.updateTag(tag, setDatabase: true);
+      MobxStore.st.deleteTag(store.editTag, setDatabase: true);
+    } else if (update) {
+      tag.id = store.editTag?.id ??
+          store.getTagByName(nameController.text)?.id ??
+          store.getTagByName(shortenController.text)?.id;
+      MobxStore.st.updateTag(tag);
+    } else {
+      MobxStore.st.addTag(tag);
+    }
+
+    store.editTag = null;
+
+    confirmButtonName = 'Add';
 
     currentColor.value = Color(kDefaultColor.value);
 
@@ -280,6 +378,15 @@ class TagsPage extends HookWidget {
         );
       },
     );
+  }
+
+  editButtonPressed() {
+    print('is it working');
+    nameController.text = store.editTag.name;
+    shortenController.text = store.editTag.shorten;
+    currentColor.value = store.editTag.color;
+    buttonName.value = store.editTag.name;
+    confirmButtonName = 'Update';
   }
 // #endregion
 

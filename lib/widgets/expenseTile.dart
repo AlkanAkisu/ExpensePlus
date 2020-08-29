@@ -26,6 +26,7 @@ class _ExpenseTileState extends State<ExpenseTile> {
 
   Widget expenseTile(Expense expense) {
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       width: double.infinity,
       height: 80,
       child: Row(
@@ -76,7 +77,7 @@ class _ExpenseTileState extends State<ExpenseTile> {
   }
 
   Widget tagRow(Expense expense) {
-    if (expense.tags == null) {
+    if (expense.tags == null || expense.tags.isEmpty) {
       expense.tags = [Tag.otherTag];
     }
     return SingleChildScrollView(
@@ -137,14 +138,10 @@ class _ExpenseTileState extends State<ExpenseTile> {
                   margin:
                       const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      width: 1,
-                      color: Colors.blue[700],
-                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black87,
-                        blurRadius: 2,
+                        blurRadius: 1,
                         offset: Offset(0, 1),
                       )
                     ],
@@ -174,20 +171,15 @@ class _ExpenseTileState extends State<ExpenseTile> {
               minHeight: 70,
             ),
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 5),
-            height: double.infinity,
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
                   color: Colors.black87,
-                  blurRadius: 2,
+                  blurRadius: 1,
                   offset: Offset(0, 1),
                 )
               ],
               borderRadius: BorderRadius.circular(50),
-              border: Border.all(
-                width: 1,
-                color: Colors.blue[700],
-              ),
               color: Colors.grey[100],
             ),
             child: Center(

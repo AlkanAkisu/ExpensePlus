@@ -28,7 +28,7 @@ class _GraphPageState extends State<GraphPage>
       DateTime.now().month,
       DateTime.now().day,
     );
-    print(store.graphSelectedDate);
+
     store.updateGraphSelectedDate(store.graphSelectedDate ?? today);
 
     _controller = new TabController(length: 3, vsync: this);
@@ -232,8 +232,10 @@ class _GraphPageState extends State<GraphPage>
         return el.value + prev;
       },
     );
+    bool limitextended = false;
+    bool isUseLimit = store.limitMap[ViewType.Day] != null && store.isUseLimit;
+    if (isUseLimit) limitextended = totalExpenseOfTags > store.limitMap[type];
 
-    bool limitextended = totalExpenseOfTags > store.limitMap[type];
     Color color = limitextended ? Colors.red[700] : Colors.black;
     FontWeight fontWeight = limitextended ? FontWeight.w700 : FontWeight.w500;
     double fontSize = limitextended ? 19 : 17;
@@ -258,7 +260,9 @@ class _GraphPageState extends State<GraphPage>
                   ),
                   child: Center(
                     child: Text(
-                      'Total / Limit : $totalExpenseOfTags / ${store.limitMap[type]}',
+                      isUseLimit
+                          ? 'Total / Limit : $totalExpenseOfTags / ${store.limitMap[type]}'
+                          : 'Total Expense: $totalExpenseOfTags ',
                       style: TextStyle(
                         fontSize: fontSize,
                         fontWeight: fontWeight,

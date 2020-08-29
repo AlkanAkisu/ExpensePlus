@@ -57,13 +57,40 @@ class SettingsPage extends HookWidget {
                   ),
                 ),
                 ListTile(
+                  leading: Switch(
+                    value: store.isUseLimit ?? false,
+                    onChanged: (isChecked) {
+                      store.setUseLimit(
+                        isChecked,
+                        setDatabase: true,
+                      );
+                    },
+                  )
+                  //todo implent
+                  ,
+                  title: Text(
+                    'Use Limit',
+                    style: TextStyle(
+                      fontSize: 16,
+                      letterSpacing: 0.3,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                Divider(
+                  thickness: 1,
+                ),
+                ListTile(
+                  enabled: (store.isUseLimit ?? false),
                   leading: Checkbox(
                     value: store.isAutomatic,
-                    onChanged: (isChecked) {
-                      store.isAutomatic = isChecked;
-                      if (store.isAutomatic) store.automaticSet(true);
-                      LimitProvider.db.updateIsAutomatic(isChecked);
-                    },
+                    onChanged: (store.isUseLimit ?? false)
+                        ? (isChecked) {
+                            store.isAutomatic = isChecked;
+                            if (store.isAutomatic)
+                              store.automaticSet(setDatabase: true);
+                          }
+                        : null,
                   )
                   //todo implent
                   ,
@@ -80,6 +107,7 @@ class SettingsPage extends HookWidget {
                   thickness: 1,
                 ),
                 ListTile(
+                  enabled: store.isUseLimit ?? false,
                   title: Text(
                     'Configure Monthly Limit',
                     style: TextStyle(
@@ -98,7 +126,7 @@ class SettingsPage extends HookWidget {
                   thickness: 1,
                 ),
                 ListTile(
-                  enabled: !store.isAutomatic,
+                  enabled: (store.isUseLimit ?? false) && !store.isAutomatic,
                   title: Text(
                     'Configure Weekly Limit',
                     style: TextStyle(
@@ -117,7 +145,7 @@ class SettingsPage extends HookWidget {
                   thickness: 1,
                 ),
                 ListTile(
-                  enabled: !store.isAutomatic,
+                  enabled: (store.isUseLimit ?? false) && !store.isAutomatic,
                   title: Text(
                     'Configure Daily Limit',
                     style: TextStyle(
@@ -316,8 +344,12 @@ class SettingsPage extends HookWidget {
     );
 
     if (amount.value != null) {
-      store.setLimit(viewType, amount.value, true);
-      if (store.isAutomatic) store.automaticSet(true);
+      store.setLimit(
+        viewType,
+        amount.value,
+        setDatabase: true,
+      );
+      if (store.isAutomatic) store.automaticSet(setDatabase: true);
     }
   }
 

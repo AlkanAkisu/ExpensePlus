@@ -1,6 +1,8 @@
 import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
+import 'package:tracker_but_fast/database/expense_provider.dart';
 import 'package:tracker_but_fast/database/limit_provider.dart';
+import 'package:tracker_but_fast/database/tag_provider.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 import 'package:tracker_but_fast/models/expense.dart';
 import 'package:tracker_but_fast/pages/graphPage.dart';
@@ -14,6 +16,7 @@ class MobxStore extends MobxStoreBase with _$MobxStore {
 }
 
 abstract class MobxStoreBase with Store {
+  // #region VARIABLES
   @observable
   List<Expense> expenses = new List<Expense>();
   @observable
@@ -27,11 +30,16 @@ abstract class MobxStoreBase with Store {
   @observable
   List<Tag> tags = new List<Tag>();
   @observable
+  Tag editTag;
+  @observable
   Expense thumbnailExpense = new Expense();
   @observable
   Map<ViewType, double> limitMap = new Map();
   @observable
   bool isAutomatic;
+  @observable
+  bool isUseLimit;
+  // #endregion
 
   //
   //  EXPENSE SECTION
@@ -42,23 +50,29 @@ abstract class MobxStoreBase with Store {
   void addExpense(Expense expense) {
     print('STORE:\t expense added ${expense.name}');
     expenses.add(expense);
-    if (isSelectedDate(expense)) selectedDateExpenses.add(expense);
+    if (isSelectedDate(expense, selectedDate))
+      selectedDateExpenses = [...selectedDateExpenses, expense];
   }
 
   @action
   void addAllExpenses(List<Expense> inputExpenses) {
     expenses.addAll(inputExpenses);
     inputExpenses.forEach((expense) {
-      if (isSelectedDate(expense)) selectedDateExpenses.add(expense);
+      if (isSelectedDate(expense, selectedDate))
+        selectedDateExpenses = [...selectedDateExpenses, expense];
     });
     print('STORE:\t expenses added $expenses');
   }
 
   @action
   void deleteExpense(Expense expense) {
-    expenses.removeWhere((element) => element.id == expense.id);
-    if (isSelectedDate(expense))
-      selectedDateExpenses.removeWhere((element) => element.id == expense.id);
+    // expenses.removeWhere((element) => element.id == expense.id);
+    expenses = expenses.where((e) => e.id != expense.id).toList();
+
+    if (isSelectedDate(expense, selectedDate))
+      selectedDateExpenses = selectedDateExpenses
+          .where((element) => element.id != expense.id)
+          .toList();
     print('STORE:\texpense deleted ${expense.name}');
   }
 
@@ -87,8 +101,12 @@ abstract class MobxStoreBase with Store {
   @action
   void updateSelectedDate(DateTime inputSelectedDate) {
     selectedDate = inputSelectedDate;
-    selectedDateExpenses = expenses?.where(isSelectedDate)?.toList();
-    selectedDateExpenses ??= [];
+
+    selectedDateExpenses = expenses
+            ?.where((expense) => isSelectedDate(expense, inputSelectedDate))
+            ?.toList() ??
+        [];
+
     print(
         'STORE:\tselectedDateUpdated. selectedDateExpenses ==> ${selectedDateExpenses.map((e) => e.name).join(' ')}');
   }
@@ -131,8 +149,23 @@ abstract class MobxStoreBase with Store {
   }
 
   @action
-  void deleteTag(Tag tagToDelete) {
-    tags.removeWhere((element) => element.id == tagToDelete.id);
+  Future<void> deleteTag(Tag tagToDelete, {bool setDatabase = false}) async {
+    tags = tags.where((e) => e.id != tagToDelete.id).toList();
+
+    var expensesNeedUpdate = [];
+    //edit expenses if there is a expense that have a [tagToDelete]
+    expenses = expenses.fold([], (list, exp) {
+      if (exp.tags.contains(tagToDelete)) {
+        exp.tags = exp.tags.where((tag) => tag != tagToDelete).toList();
+        expensesNeedUpdate.add(exp);
+      }
+      return [...list, exp];
+    });
+    for (final exp in expensesNeedUpdate) {
+      await ExpenseProvider.db.update(exp);
+    }
+
+    if (setDatabase) TagProvider.db.delete(tagToDelete);
 
     print('STORE:\ttag deleted ${tagToDelete.name}');
   }
@@ -143,13 +176,23 @@ abstract class MobxStoreBase with Store {
   }
 
   @action
-  void updateTag(Tag tagToUpdate) {
+  void updateTag(Tag tagToUpdate, {bool setDatabase = false}) {
     tags = tags.map((e) {
       if (e.id == tagToUpdate.id) return tagToUpdate;
       return e;
     }).toList();
-
-    //print('STORE:\tupdated tag ${tagToUpdate.name}');
+    for (var expense in expenses) {
+      var tags = expense.tags;
+      expense.tags = tags.map((tag) {
+        if (tag.name == tagToUpdate.name) return tagToUpdate;
+        return tag;
+      }).toList();
+      if (expense.tags.any((tag) => tag.name == tagToUpdate.name)) {
+        updateExpense(expense);
+        ExpenseProvider.db.update(expense);
+      }
+    }
+    if (setDatabase) TagProvider.db.update(tagToUpdate);
   }
 
   @action
@@ -220,8 +263,13 @@ abstract class MobxStoreBase with Store {
   @action
   double getSelectedDateTotalPrice([DateTime inputSelectedDate]) {
     return expenses.fold(0, (prev, expense) {
-      //todo add limit
-
+      //todo add lsmit
+      if (inputSelectedDate == null && selectedDate == null)
+        inputSelectedDate = DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        );
       if (isSelectedDate(expense, inputSelectedDate ?? selectedDate))
         return prev + expense.getTotalExpense();
       return prev;
@@ -247,13 +295,15 @@ abstract class MobxStoreBase with Store {
   // #region LIMIT
   @action
   Future<void> setLimit(ViewType viewType, double limit,
-      [bool setDatabase]) async {
-    limitMap[viewType] = limit;
-    if (setDatabase ?? false) await LimitProvider.db.updateLimit(limitMap);
+      {bool setDatabase = false}) async {
+    var newmap = limitMap;
+    newmap[viewType] = limit;
+    limitMap = newmap;
+    if (setDatabase) await LimitProvider.db.updateLimit(limitMap);
   }
 
   @action
-  Future<void> automaticSet([bool setDatabase]) async {
+  Future<void> automaticSet({bool setDatabase = false}) async {
     final monthly = limitMap[ViewType.Month];
     setLimit(
       ViewType.Day,
@@ -263,13 +313,31 @@ abstract class MobxStoreBase with Store {
       ViewType.Week,
       double.parse((monthly / 30 * 7).toStringAsFixed(2)),
     );
-    if (setDatabase ?? false) await LimitProvider.db.updateLimit(limitMap);
+    if (setDatabase) {
+      await LimitProvider.db.updateLimit(limitMap);
+      LimitProvider.db.updateIsAutomatic(isAutomatic);
+    }
+  }
+
+  @action
+  Future<void> setUseLimit(bool inputUseLimit,
+      {bool setDatabase = false}) async {
+    isUseLimit = inputUseLimit;
+    if (setDatabase) {
+      await LimitProvider.db.updateUseLimit(isUseLimit);
+    }
   }
   //#endregion
 
   // #region HELPER FUNCTIONS
   bool isSelectedDate(Expense exp, [DateTime dateInput]) {
-    dateInput ??= selectedDate;
+    if (dateInput == null)
+      dateInput ??= selectedDate ??
+          DateTime(
+            DateTime.now().year,
+            DateTime.now().month,
+            DateTime.now().day,
+          );
     return exp.date.year == dateInput.year &&
         exp.date.month == dateInput.month &&
         exp.date.day == dateInput.day;

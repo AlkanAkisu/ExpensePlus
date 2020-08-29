@@ -103,6 +103,21 @@ mixin _$MobxStore on MobxStoreBase, Store {
     });
   }
 
+  final _$editTagAtom = Atom(name: 'MobxStoreBase.editTag');
+
+  @override
+  Tag get editTag {
+    _$editTagAtom.reportRead();
+    return super.editTag;
+  }
+
+  @override
+  set editTag(Tag value) {
+    _$editTagAtom.reportWrite(value, super.editTag, () {
+      super.editTag = value;
+    });
+  }
+
   final _$thumbnailExpenseAtom = Atom(name: 'MobxStoreBase.thumbnailExpense');
 
   @override
@@ -148,19 +163,52 @@ mixin _$MobxStore on MobxStoreBase, Store {
     });
   }
 
+  final _$isUseLimitAtom = Atom(name: 'MobxStoreBase.isUseLimit');
+
+  @override
+  bool get isUseLimit {
+    _$isUseLimitAtom.reportRead();
+    return super.isUseLimit;
+  }
+
+  @override
+  set isUseLimit(bool value) {
+    _$isUseLimitAtom.reportWrite(value, super.isUseLimit, () {
+      super.isUseLimit = value;
+    });
+  }
+
+  final _$deleteTagAsyncAction = AsyncAction('MobxStoreBase.deleteTag');
+
+  @override
+  Future<void> deleteTag(Tag tagToDelete, {bool setDatabase = false}) {
+    return _$deleteTagAsyncAction
+        .run(() => super.deleteTag(tagToDelete, setDatabase: setDatabase));
+  }
+
   final _$setLimitAsyncAction = AsyncAction('MobxStoreBase.setLimit');
 
   @override
-  Future<void> setLimit(ViewType viewType, double limit, [bool setDatabase]) {
+  Future<void> setLimit(ViewType viewType, double limit,
+      {bool setDatabase = false}) {
     return _$setLimitAsyncAction
-        .run(() => super.setLimit(viewType, limit, setDatabase));
+        .run(() => super.setLimit(viewType, limit, setDatabase: setDatabase));
   }
 
   final _$automaticSetAsyncAction = AsyncAction('MobxStoreBase.automaticSet');
 
   @override
-  Future<void> automaticSet([bool setDatabase]) {
-    return _$automaticSetAsyncAction.run(() => super.automaticSet(setDatabase));
+  Future<void> automaticSet({bool setDatabase = false}) {
+    return _$automaticSetAsyncAction
+        .run(() => super.automaticSet(setDatabase: setDatabase));
+  }
+
+  final _$setUseLimitAsyncAction = AsyncAction('MobxStoreBase.setUseLimit');
+
+  @override
+  Future<void> setUseLimit(bool inputUseLimit, {bool setDatabase = false}) {
+    return _$setUseLimitAsyncAction
+        .run(() => super.setUseLimit(inputUseLimit, setDatabase: setDatabase));
   }
 
   final _$MobxStoreBaseActionController =
@@ -255,17 +303,6 @@ mixin _$MobxStore on MobxStoreBase, Store {
   }
 
   @override
-  void deleteTag(Tag tagToDelete) {
-    final _$actionInfo = _$MobxStoreBaseActionController.startAction(
-        name: 'MobxStoreBase.deleteTag');
-    try {
-      return super.deleteTag(tagToDelete);
-    } finally {
-      _$MobxStoreBaseActionController.endAction(_$actionInfo);
-    }
-  }
-
-  @override
   void deleteAllTags() {
     final _$actionInfo = _$MobxStoreBaseActionController.startAction(
         name: 'MobxStoreBase.deleteAllTags');
@@ -277,11 +314,11 @@ mixin _$MobxStore on MobxStoreBase, Store {
   }
 
   @override
-  void updateTag(Tag tagToUpdate) {
+  void updateTag(Tag tagToUpdate, {bool setDatabase = false}) {
     final _$actionInfo = _$MobxStoreBaseActionController.startAction(
         name: 'MobxStoreBase.updateTag');
     try {
-      return super.updateTag(tagToUpdate);
+      return super.updateTag(tagToUpdate, setDatabase: setDatabase);
     } finally {
       _$MobxStoreBaseActionController.endAction(_$actionInfo);
     }
@@ -340,9 +377,11 @@ graphSelectedDateExpenses: ${graphSelectedDateExpenses},
 graphSelectedDate: ${graphSelectedDate},
 selectedDate: ${selectedDate},
 tags: ${tags},
+editTag: ${editTag},
 thumbnailExpense: ${thumbnailExpense},
 limitMap: ${limitMap},
-isAutomatic: ${isAutomatic}
+isAutomatic: ${isAutomatic},
+isUseLimit: ${isUseLimit}
     ''';
   }
 }

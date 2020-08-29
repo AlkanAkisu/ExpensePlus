@@ -3,6 +3,9 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
+import 'package:tracker_but_fast/database/expense_provider.dart';
+import 'package:tracker_but_fast/expenses_store.dart';
+import 'package:tracker_but_fast/models/expense.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 
 class TagProvider {
@@ -91,24 +94,39 @@ class TagProvider {
     print('DATABASE:\tall tags deleted');
   }
 
-  Future<List<Tag>> getAllTags() async {
+  Future<List<Tag>> getAllTags([bool isGetExpenses = false]) async {
     final records = await _tagStore.find(
       await database,
     );
-    if (records.isEmpty) return [];
-    List<Tag> rv = records.map(
-      (record) {
-        Tag tag = Tag.fromJson(record.value);
-        tag.id = record.key;
-        return tag;
-      },
-    ).toList();
-    return rv; //change it
+    List<Tag> rv;
+    rv = [];
+
+    if (records.isNotEmpty) {
+      rv = records.map(
+        (record) {
+          Tag tag = Tag.fromJson(record.value);
+          tag.id = record.key;
+          return tag;
+        },
+      ).toList();
+    }
+    if (isGetExpenses) {
+      if (MobxStore.st.tags.isEmpty) MobxStore.st.addAllTags(rv);
+
+      List<Expense> expenses = await ExpenseProvider.db.getAllExpenses();
+
+      if (expenses.isEmpty) {
+        print('Database value ==> is empty');
+      } else {
+        MobxStore.st.addAllExpenses(expenses);
+      }
+    }
+    return rv;
   }
 
   Future<Tag> searchTag(String str) async {
     final tags = await getAllTags();
-    // print('DATABASE:\t tags = $tags\t str = $str');
+
     if (tags == null) return null;
     return tags
         .where(

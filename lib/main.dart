@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:tracker_but_fast/pages/graphPage.dart';
-import 'package:tracker_but_fast/pages/settingsPage.dart';
-import 'package:tracker_but_fast/pages/tagsPage.dart';
-import 'package:tracker_but_fast/pages/trackPage.dart';
 
-void main() {
+import 'database/limit_provider.dart';
+import 'database/tag_provider.dart';
+import 'expenses_store.dart';
+import 'pages/graphPage.dart';
+import 'pages/settingsPage.dart';
+import 'pages/tagsPage.dart';
+import 'pages/trackPage.dart';
+
+void main() async {
   runApp(MyApp());
 }
 
@@ -28,22 +32,40 @@ class _MyAppState extends State<MyApp> {
     Destination('Tags', Icons.bookmark_border, TagsPage()),
   ];
   final navigatorKey = GlobalKey<NavigatorState>();
+  bool initDone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    init().then((value) => initDone = true);
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        navigatorKey: navigatorKey,
-        title: 'Tracker But Fast',
-        home: SafeArea(
-          child: Scaffold(
-            appBar: appBar(context),
-            bottomNavigationBar: SizedBox(
-              height: 60,
-              child: bottomNavigationBar(),
-            ),
-            body: allDestinations[_currentIndex].widget,
-          ),
-        ));
+      navigatorKey: navigatorKey,
+      title: 'Tracker But Fast',
+      home: SafeArea(
+        //FUTUR BUILDER KULLANMA
+        child: Builder(
+          builder: (context) {
+            if (initDone)
+              return Scaffold(
+                appBar: appBar(context),
+                bottomNavigationBar: SizedBox(
+                  height: 60,
+                  child: bottomNavigationBar(),
+                ),
+                body: allDestinations[_currentIndex].widget,
+              );
+
+            return Scaffold(
+              body: splashScreen(),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   AppBar appBar(BuildContext bc) {
@@ -98,5 +120,66 @@ class _MyAppState extends State<MyApp> {
         );
       }).toList(),
     );
+  }
+
+  Widget splashScreen() {
+    return SizedBox.expand(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.blue[500],
+          gradient: RadialGradient(
+            colors: [
+              Colors.blue[500],
+              Colors.blue[500],
+              Colors.blue[700],
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(
+                Icons.attach_money,
+                size: 64,
+                color: Colors.white,
+              ),
+              Text(
+                'TRACKER\nBUT FAST',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 48,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> init() async {
+    if (initDone) return [];
+
+    final futures = await Future.wait([
+      TagProvider.db.getAllTags(true),
+      LimitProvider.db.getLimit(),
+      LimitProvider.db.getIsAutomatic(),
+      LimitProvider.db.getUseLimit(),
+    ]);
+
+    print('init');
+    final store = MobxStore.st;
+
+    if (store.limitMap.isEmpty) store.limitMap = futures[1];
+
+    if (store.isAutomatic == null) store.isAutomatic = futures[2];
+
+    if (store.isUseLimit == null) store.isUseLimit = futures[3];
+
+    initDone = true;
+    setState(() {});
   }
 }

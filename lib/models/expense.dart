@@ -44,7 +44,7 @@ class Expense {
       if (element['name'] == 'other')
         tags.add(Tag.otherTag);
       else
-        tags.add(MobxStore.st.getTagByName(element['name'])); //todo debug
+        tags.add(MobxStore.st.getTagByName(element['name'])); 
     });
     List<double> prices = List();
     json["prices"]?.forEach((element) {

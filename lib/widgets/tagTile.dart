@@ -1,26 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 
 class TagTile extends StatelessWidget {
   const TagTile({
     Key key,
     @required this.tag,
+    @required this.editButtonCallback,
   }) : super(key: key);
 
   final Tag tag;
+  final Function editButtonCallback;
 
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
 
     return GestureDetector(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Expanded(child: Center(child: tagContainer(tag.name, width))),
-          Expanded(child: Center(child: tagContainer(tag.shorten, width))),
+      child: Slidable(
+        actionPane: SlidableStrechActionPane(),
+        direction: Axis.horizontal,
+        actionExtentRatio: 0.5,
+        actions: <Widget>[
+          IconSlideAction(
+            caption: 'Edit',
+            color: Colors.blue,
+            icon: Icons.edit,
+            onTap: () => editButtonPressed(),
+          ),
         ],
+        secondaryActions: <Widget>[
+          IconSlideAction(
+            caption: 'Delete',
+            color: Colors.red,
+            icon: Icons.delete,
+            onTap: () => deleteButtonPressed(),
+          ),
+        ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Expanded(child: Center(child: tagContainer(tag.name, width))),
+            Expanded(child: Center(child: tagContainer(tag.shorten, width))),
+          ],
+        ),
       ),
     );
   }
@@ -44,5 +70,25 @@ class TagTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  deleteButtonPressed() async {
+    await MobxStore.st.deleteTag(
+      tag,
+      setDatabase: true,
+    );
+    Fluttertoast.showToast(
+      msg: 'Tag has been deleted',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.red[400],
+      textColor: Colors.white,
+      fontSize: 14.0,
+    );
+  }
+
+  editButtonPressed() {
+    MobxStore.st.editTag = tag;
+    editButtonCallback();
   }
 }
