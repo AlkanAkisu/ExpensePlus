@@ -21,7 +21,11 @@ class Expense {
     this.date,
   }) {
     prices = prices == null ? [0] : prices.isEmpty ? [0] : prices;
-    date ??= DateTime.now();
+    date ??= DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
   }
 
   static Expense empty() {
@@ -44,7 +48,7 @@ class Expense {
       if (element['name'] == 'other')
         tags.add(Tag.otherTag);
       else
-        tags.add(MobxStore.st.getTagByName(element['name'])); 
+        tags.add(MobxStore.st.getTagByName(element['name']));
     });
     List<double> prices = List();
     json["prices"]?.forEach((element) {

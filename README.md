@@ -1,4 +1,4 @@
-# tracker_but_fast
+# Expense Plus
 
 A new Flutter project.
 

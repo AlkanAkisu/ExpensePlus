@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:tracker_but_fast/database/expense_provider.dart';
+import 'package:tracker_but_fast/models/tag.dart';
+import 'package:tracker_but_fast/pages/tagDetailPage.dart';
+import 'package:tracker_but_fast/utilities/dummy_data.dart';
 
 import 'database/limit_provider.dart';
 import 'database/tag_provider.dart';
@@ -8,7 +13,7 @@ import 'pages/settingsPage.dart';
 import 'pages/tagsPage.dart';
 import 'pages/trackPage.dart';
 
-void main() async {
+void main() {
   runApp(MyApp());
 }
 
@@ -25,7 +30,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int _currentIndex = 1;
   final List<Destination> allDestinations = <Destination>[
     Destination('Graph', Icons.trending_up, GraphPage()),
     Destination('Add Expense', Icons.attach_money, TrackPage()),
@@ -46,18 +50,22 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: navigatorKey,
       title: 'Tracker But Fast',
       home: SafeArea(
-        //FUTUR BUILDER KULLANMA
         child: Builder(
           builder: (context) {
+            if (initDone) MobxStore.st.navigatorKey = navigatorKey;
             if (initDone)
-              return Scaffold(
-                appBar: appBar(context),
-                bottomNavigationBar: SizedBox(
-                  height: 60,
-                  child: bottomNavigationBar(),
-                ),
-                body: allDestinations[_currentIndex].widget,
-              );
+              return Observer(builder: (_) {
+                MobxStore.st.currentIndex;
+
+                return Scaffold(
+                  appBar: appBar(context),
+                  bottomNavigationBar: SizedBox(
+                    height: 60,
+                    child: bottomNavigationBar(),
+                  ),
+                  body: allDestinations[MobxStore.st.currentIndex].widget,
+                );
+              });
 
             return Scaffold(
               body: splashScreen(),
@@ -100,10 +108,10 @@ class _MyAppState extends State<MyApp> {
       ),
       selectedFontSize: 16,
       backgroundColor: Colors.grey[700],
-      currentIndex: _currentIndex,
+      currentIndex: MobxStore.st.currentIndex,
       onTap: (int index) {
         setState(() {
-          _currentIndex = index;
+          MobxStore.st.currentIndex = index;
         });
       },
       items: allDestinations.map((Destination destination) {
@@ -162,22 +170,29 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> init() async {
     if (initDone) return [];
+    // await LimitProvider.db.resetFirstTime();
+    bool firstTime = await LimitProvider.db.isFirstTime();
+    if (firstTime) {
+      print('${DummyData.tags()} ${DummyData.expenses()}');
+      for (var newTag in DummyData.tags()) await TagProvider.db.addTag(newTag);
+      for (var newExpense in DummyData.expenses())
+        await ExpenseProvider.db.createExpense(newExpense);
+    }
+      final futures = await Future.wait([
+        TagProvider.db.getAllTags(true),
+        LimitProvider.db.getLimit(),
+        LimitProvider.db.getIsAutomatic(),
+        LimitProvider.db.getUseLimit(),
+      ]);
 
-    final futures = await Future.wait([
-      TagProvider.db.getAllTags(true),
-      LimitProvider.db.getLimit(),
-      LimitProvider.db.getIsAutomatic(),
-      LimitProvider.db.getUseLimit(),
-    ]);
+      final store = MobxStore.st;
 
-    print('init');
-    final store = MobxStore.st;
+      if (store.limitMap.isEmpty) store.limitMap = futures[1];
 
-    if (store.limitMap.isEmpty) store.limitMap = futures[1];
+      if (store.isAutomatic == null) store.isAutomatic = futures[2];
 
-    if (store.isAutomatic == null) store.isAutomatic = futures[2];
+      if (store.isUseLimit == null) store.isUseLimit = futures[3];
 
-    if (store.isUseLimit == null) store.isUseLimit = futures[3];
 
     initDone = true;
     setState(() {});

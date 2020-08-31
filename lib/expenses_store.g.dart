@@ -178,6 +178,36 @@ mixin _$MobxStore on MobxStoreBase, Store {
     });
   }
 
+  final _$editingAtom = Atom(name: 'MobxStoreBase.editing');
+
+  @override
+  Set<Expense> get editing {
+    _$editingAtom.reportRead();
+    return super.editing;
+  }
+
+  @override
+  set editing(Set<Expense> value) {
+    _$editingAtom.reportWrite(value, super.editing, () {
+      super.editing = value;
+    });
+  }
+
+  final _$currentIndexAtom = Atom(name: 'MobxStoreBase.currentIndex');
+
+  @override
+  int get currentIndex {
+    _$currentIndexAtom.reportRead();
+    return super.currentIndex;
+  }
+
+  @override
+  set currentIndex(int value) {
+    _$currentIndexAtom.reportWrite(value, super.currentIndex, () {
+      super.currentIndex = value;
+    });
+  }
+
   final _$deleteTagAsyncAction = AsyncAction('MobxStoreBase.deleteTag');
 
   @override
@@ -215,11 +245,11 @@ mixin _$MobxStore on MobxStoreBase, Store {
       ActionController(name: 'MobxStoreBase');
 
   @override
-  void addExpense(Expense expense) {
+  void addExpense(Expense expense, {bool setDatabase = false}) {
     final _$actionInfo = _$MobxStoreBaseActionController.startAction(
         name: 'MobxStoreBase.addExpense');
     try {
-      return super.addExpense(expense);
+      return super.addExpense(expense, setDatabase: setDatabase);
     } finally {
       _$MobxStoreBaseActionController.endAction(_$actionInfo);
     }
@@ -259,11 +289,11 @@ mixin _$MobxStore on MobxStoreBase, Store {
   }
 
   @override
-  void updateExpense(Expense expense) {
+  void updateExpense(Expense expense, {bool setDatabase = false}) {
     final _$actionInfo = _$MobxStoreBaseActionController.startAction(
         name: 'MobxStoreBase.updateExpense');
     try {
-      return super.updateExpense(expense);
+      return super.updateExpense(expense, setDatabase: setDatabase);
     } finally {
       _$MobxStoreBaseActionController.endAction(_$actionInfo);
     }
@@ -281,11 +311,11 @@ mixin _$MobxStore on MobxStoreBase, Store {
   }
 
   @override
-  void addTag(Tag newTag) {
+  void addTag(Tag newTag, {bool setDatabase = false}) {
     final _$actionInfo = _$MobxStoreBaseActionController.startAction(
         name: 'MobxStoreBase.addTag');
     try {
-      return super.addTag(newTag);
+      return super.addTag(newTag, setDatabase: setDatabase);
     } finally {
       _$MobxStoreBaseActionController.endAction(_$actionInfo);
     }
@@ -381,7 +411,9 @@ editTag: ${editTag},
 thumbnailExpense: ${thumbnailExpense},
 limitMap: ${limitMap},
 isAutomatic: ${isAutomatic},
-isUseLimit: ${isUseLimit}
+isUseLimit: ${isUseLimit},
+editing: ${editing},
+currentIndex: ${currentIndex}
     ''';
   }
 }

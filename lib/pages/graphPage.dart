@@ -1,9 +1,9 @@
-import 'package:pie_chart/pie_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:tracker_but_fast/models/tag.dart';
+import 'package:tracker_but_fast/pages/tagDetailPage.dart';
 
 class GraphPage extends StatefulWidget {
   GraphPage({Key key}) : super(key: key);
@@ -128,6 +128,12 @@ class _GraphPageState extends State<GraphPage>
         ? ''
         : MobxStore.st.getSelectedDateTotalPrice(date).toString();
 
+    bool limitextended = false;
+    bool isUseLimit = store.limitMap[ViewType.Day] != null && store.isUseLimit;
+    if (isUseLimit)
+      limitextended = MobxStore.st.getSelectedDateTotalPrice(date) >
+          store.limitMap[ViewType.Day];
+
     return Container(
       margin: EdgeInsets.all(0.3),
       decoration: BoxDecoration(
@@ -149,9 +155,14 @@ class _GraphPageState extends State<GraphPage>
           ),
           Text(
             expenseText,
+            overflow: TextOverflow.fade,
+            maxLines: 1,
             style: TextStyle(
-              fontWeight: expenseWeight ?? FontWeight.w300,
-              fontSize: 12,
+              fontWeight: !limitextended
+                  ? expenseWeight ?? FontWeight.w300
+                  : FontWeight.w400,
+              fontSize: !limitextended ? 12 : 13,
+              color: !limitextended ? Colors.black : Colors.red,
             ),
           ),
         ],
@@ -159,7 +170,7 @@ class _GraphPageState extends State<GraphPage>
     );
   }
 
-// #endregion CALENDAR
+// #endregion
 
 // #region Graph
 
@@ -167,6 +178,8 @@ class _GraphPageState extends State<GraphPage>
     return Observer(builder: (_) {
       store.graphSelectedDateExpenses;
       store.graphSelectedDate;
+      store.tags;
+      store.expenses;
       return Container(
         margin: EdgeInsets.symmetric(
           vertical: 7,
@@ -176,22 +189,58 @@ class _GraphPageState extends State<GraphPage>
           children: <Widget>[
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey[400],
+                border: Border.all(
+                  color: Colors.blue[700],
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: TabBar(
                 controller: _controller,
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicatorPadding: EdgeInsets.symmetric(horizontal: 20),
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.blue[100],
+
+                ),
+                indicatorWeight: 3,
                 tabs: [
                   Tab(
-                    icon: Icon(Icons.view_day),
-                    text: 'Day',
+                    icon: Icon(
+                      Icons.view_day,
+                      color: Colors.blue[700],
+                    ),
+                    child: Text(
+                      'Day',
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                      ),
+                    ),
                   ),
                   Tab(
-                    icon: Icon(Icons.view_week),
-                    text: 'Week',
+                    icon: Icon(
+                      Icons.view_week,
+                      color: Colors.blue[700],
+                    ),
+                    child: Text(
+                      'Week',
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                      ),
+                    ),
                   ),
                   Tab(
-                    icon: Icon(Icons.view_comfy),
-                    text: 'Month',
+                    icon: Icon(
+                      Icons.view_comfy,
+                      color: Colors.blue[700],
+                    ),
+                    child: Text(
+                      'Month',
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -219,19 +268,15 @@ class _GraphPageState extends State<GraphPage>
     });
   }
 
-  Widget tabViewElement(
-    ViewType type,
-  ) {
-    var tags = store.getTagTotalGraph(store.graphSelectedDateExpenses[type]);
+  Widget tabViewElement(ViewType type) {
+    Map<Tag, double> tags =
+        store.getTagTotalGraph(store.graphSelectedDateExpenses[type]);
+
     var entries = tags.entries.toList();
     var percent;
     entries.sort((a, b) => -a.value.compareTo(b.value));
-    double totalExpenseOfTags = entries.fold(
-      0,
-      (prev, el) {
-        return el.value + prev;
-      },
-    );
+    double totalExpenseOfTags = store.getTotalExpenseByView(type);
+
     bool limitextended = false;
     bool isUseLimit = store.limitMap[ViewType.Day] != null && store.isUseLimit;
     if (isUseLimit) limitextended = totalExpenseOfTags > store.limitMap[type];
@@ -243,109 +288,107 @@ class _GraphPageState extends State<GraphPage>
     return SingleChildScrollView(
       child: entries.isEmpty
           ? Container()
-          : Column(
-              children: <Widget>[
-                Container(
-                  //total expense
-                  height: 50,
-                  width: double.infinity,
-                  margin: EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      width: 2,
-                      color: color,
-                    ),
+          : Container(
+              height: 400,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Hint: Click A Tag For More Info',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w100),
                   ),
-                  child: Center(
-                    child: Text(
-                      isUseLimit
-                          ? 'Total / Limit : $totalExpenseOfTags / ${store.limitMap[type]}'
-                          : 'Total Expense: $totalExpenseOfTags ',
-                      style: TextStyle(
-                        fontSize: fontSize,
-                        fontWeight: fontWeight,
+                  Container(
+                    //total expense
+                    height: 50,
+                    width: double.infinity,
+                    margin: EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        width: 2,
                         color: color,
-                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        isUseLimit
+                            ? 'Total / Limit : $totalExpenseOfTags / ${store.limitMap[type]}'
+                            : 'Total Expense: $totalExpenseOfTags ',
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: fontWeight,
+                          color: color,
+                          letterSpacing: 1.2,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                ...entries.map((entry) {
-                  var tag = entry.key;
-                  var expenseOfTag = entry.value;
-                  percent = (expenseOfTag / totalExpenseOfTags) * 100;
-                  return graphTile(tag, expenseOfTag, percent);
-                }).toList(),
-                PieChart(
-                  dataMap: entries.fold(
-                    {},
-                    (prev, element) {
-                      return {
-                        ...prev,
-                        element.key.name: element.value,
-                      };
-                    },
-                  ),
-                  colorList: entries.fold(
-                    [],
-                    (prev, element) {
-                      return [
-                        ...prev,
-                        element.key.color,
-                      ];
-                    },
-                  ),
-                )
-              ],
+                  ...entries.map((entry) {
+                    var tag = entry.key;
+                    var expenseOfTag = entry.value;
+                    percent = (expenseOfTag / totalExpenseOfTags) * 100;
+                    return graphTile(tag, expenseOfTag, percent);
+                  }).toList(),
+                ],
+              ),
             ),
     );
   }
 
   Widget graphTile(Tag tag, double expenseOfTag, double percent) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
+    return GestureDetector(
+      onTap: () => MobxStore.st.navigatorKey.currentState.push(
+        MaterialPageRoute(
+          builder: (_) => TagDetailPage(tag),
+        ),
       ),
-      height: 70,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Container(
-                width: 30,
-                decoration: BoxDecoration(
-                  color: tag.color,
-                ),
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+        ),
+        height: 70,
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 15,
+              decoration: BoxDecoration(
+                color: tag.color,
               ),
-              SizedBox(width: 6),
-              Text(
-                tag.name.toUpperCase(),
+            ),
+            SizedBox(width: 8),
+            Text(
+              tag.name.toUpperCase(),
+              style: TextStyle(
+                letterSpacing: 0.75,
+                fontSize: 15,
+              ),
+            ),
+            Spacer(),
+            Container(
+              constraints: BoxConstraints(minWidth: 60),
+              child: Text(
+                '${percent.toStringAsFixed(2)}%',
                 style: TextStyle(
                   letterSpacing: 0.75,
                   fontSize: 15,
                 ),
               ),
-            ],
-          ),
-          Text(
-            '${percent.toStringAsFixed(2)}%',
-            style: TextStyle(
-              letterSpacing: 0.75,
-              fontSize: 15,
             ),
-          ),
-          Text(
-            expenseOfTag.toString(),
-            style: TextStyle(
-              letterSpacing: 0.75,
-              fontSize: 15,
+            SizedBox(width: 80),
+            Container(
+              constraints: BoxConstraints(minWidth: 60),
+              child: Text(
+                expenseOfTag.toString(),
+                style: TextStyle(
+                  letterSpacing: 0.75,
+                  fontSize: 15,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

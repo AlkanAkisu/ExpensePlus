@@ -4,6 +4,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:tracker_but_fast/models/tag.dart';
+import 'package:tracker_but_fast/pages/tagDetailPage.dart';
 
 class TagTile extends StatelessWidget {
   const TagTile({
@@ -20,6 +21,11 @@ class TagTile extends StatelessWidget {
     final double width = MediaQuery.of(context).size.width;
 
     return GestureDetector(
+      onTap: () => MobxStore.st.navigatorKey.currentState.push(
+        MaterialPageRoute(
+          builder: (_) => TagDetailPage(tag),
+        ),
+      ),
       child: Slidable(
         actionPane: SlidableStrechActionPane(),
         direction: Axis.horizontal,

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
 import 'package:tracker_but_fast/database/expense_provider.dart';
@@ -32,13 +33,19 @@ abstract class MobxStoreBase with Store {
   @observable
   Tag editTag;
   @observable
-  Expense thumbnailExpense = new Expense();
+  Expense thumbnailExpense;
   @observable
   Map<ViewType, double> limitMap = new Map();
   @observable
   bool isAutomatic;
   @observable
   bool isUseLimit;
+  @observable
+  Set<Expense> editing = <Expense>{};
+  @observable
+  int currentIndex = 1;
+
+  GlobalKey<NavigatorState> navigatorKey;
   // #endregion
 
   //
@@ -47,16 +54,17 @@ abstract class MobxStoreBase with Store {
   // #region EXPENSE
 
   @action
-  void addExpense(Expense expense) {
+  void addExpense(Expense expense, {bool setDatabase = false}) {
     print('STORE:\t expense added ${expense.name}');
-    expenses.add(expense);
+    expenses = [...expenses, expense];
     if (isSelectedDate(expense, selectedDate))
       selectedDateExpenses = [...selectedDateExpenses, expense];
+    if (setDatabase) ExpenseProvider.db.createExpense(expense);
   }
 
   @action
   void addAllExpenses(List<Expense> inputExpenses) {
-    expenses.addAll(inputExpenses);
+    expenses = [...expenses, ...inputExpenses];
     inputExpenses.forEach((expense) {
       if (isSelectedDate(expense, selectedDate))
         selectedDateExpenses = [...selectedDateExpenses, expense];
@@ -80,20 +88,34 @@ abstract class MobxStoreBase with Store {
   void deleteAll() {
     expenses = [];
     selectedDateExpenses = [];
+    graphSelectedDateExpenses = {
+      ViewType.Day: [],
+      ViewType.Week: [],
+      ViewType.Month: [],
+    };
   }
 
   @action
-  void updateExpense(Expense expense) {
+  void updateExpense(Expense expense, {bool setDatabase = false}) {
+    Expense oldExp;
     expenses = expenses.map((e) {
-      if (e.id == expense.id) return expense;
+      if (e.id == expense.id) {
+        oldExp = e;
+        return expense;
+      }
       return e;
     }).toList();
 
-    selectedDateExpenses = selectedDateExpenses.map((e) {
-      updateSelectedDate(selectedDate);
-      if (e.id == expense.id) return expense;
-      return e;
-    }).toList();
+    // if (oldExp.date == expense.date)
+    //   selectedDateExpenses = selectedDateExpenses.map((e) {
+
+    //     if (e.id == expense.id) return expense;
+    //     return e;
+    //   }).toList();
+    // else
+    updateSelectedDate(selectedDate);
+
+    if (setDatabase) ExpenseProvider.db.update(expense);
 
     print('STORE:\texpense updated ${expense.name}');
   }
@@ -103,7 +125,7 @@ abstract class MobxStoreBase with Store {
     selectedDate = inputSelectedDate;
 
     selectedDateExpenses = expenses
-            ?.where((expense) => isSelectedDate(expense, inputSelectedDate))
+            ?.where((expense) => isSelectedDate(expense, selectedDate))
             ?.toList() ??
         [];
 
@@ -119,7 +141,7 @@ abstract class MobxStoreBase with Store {
 // #region TAG
 
   @action
-  void addTag(Tag newTag) {
+  void addTag(Tag newTag, {bool setDatabase = false}) {
     var foundTag = searchTag(newTag);
     if (foundTag != null) {
       newTag.id = foundTag.id;
@@ -141,6 +163,8 @@ abstract class MobxStoreBase with Store {
     }
 
     print('STORE:\ttag added ${newTag.name}');
+
+    if (setDatabase) TagProvider.db.addTag(newTag);
   }
 
   @action
@@ -157,6 +181,7 @@ abstract class MobxStoreBase with Store {
     expenses = expenses.fold([], (list, exp) {
       if (exp.tags.contains(tagToDelete)) {
         exp.tags = exp.tags.where((tag) => tag != tagToDelete).toList();
+        exp.tags = exp.tags.isEmpty ? [Tag.otherTag] : exp.tags;
         expensesNeedUpdate.add(exp);
       }
       return [...list, exp];
@@ -232,25 +257,29 @@ abstract class MobxStoreBase with Store {
   void updateGraphSelectedDate(DateTime inputSelectedDate) {
     selectedDate = DateTime.parse(selectedDate.toIso8601String());
     graphSelectedDate = inputSelectedDate;
-    graphSelectedDateExpenses[ViewType.Day] = expenses
-        .where(
-          (element) => isSelectedDate(element, graphSelectedDate),
-        )
-        .toList();
-    graphSelectedDateExpenses[ViewType.Week] = expenses
-        .where(
-          (element) =>
-              weekNumber(element.date) == weekNumber(graphSelectedDate) &&
-              element.date.year == graphSelectedDate.year,
-        )
-        .toList();
-    graphSelectedDateExpenses[ViewType.Month] = expenses
-        .where(
-          (element) =>
-              element.date.month == graphSelectedDate.month &&
-              element.date.year == graphSelectedDate.year,
-        )
-        .toList();
+
+    graphSelectedDateExpenses = {
+      ...graphSelectedDateExpenses,
+      ViewType.Day: expenses
+          .where(
+            (element) => isSelectedDate(element, graphSelectedDate),
+          )
+          .toList(),
+      ViewType.Week: expenses
+          .where(
+            (element) =>
+                weekNumber(element.date) == weekNumber(graphSelectedDate) &&
+                element.date.year == graphSelectedDate.year,
+          )
+          .toList(),
+      ViewType.Month: expenses
+          .where(
+            (element) =>
+                element.date.month == graphSelectedDate.month &&
+                element.date.year == graphSelectedDate.year,
+          )
+          .toList(),
+    };
 
     print('STORE:\t graph selected date updated. $graphSelectedDate');
   }
@@ -262,14 +291,16 @@ abstract class MobxStoreBase with Store {
 
   @action
   double getSelectedDateTotalPrice([DateTime inputSelectedDate]) {
+    if (inputSelectedDate == null && selectedDate == null)
+      inputSelectedDate = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
+
+    inputSelectedDate ??= selectedDate;
+
     return expenses.fold(0, (prev, expense) {
-      //todo add lsmit
-      if (inputSelectedDate == null && selectedDate == null)
-        inputSelectedDate = DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day,
-        );
       if (isSelectedDate(expense, inputSelectedDate ?? selectedDate))
         return prev + expense.getTotalExpense();
       return prev;
@@ -285,6 +316,37 @@ abstract class MobxStoreBase with Store {
       });
     }
     return rv;
+  }
+
+  double getTotalExpenseByView(ViewType type) {
+    switch (type) {
+      case ViewType.Day:
+        return getSelectedDateTotalPrice(graphSelectedDate);
+      case ViewType.Month:
+        int month = graphSelectedDate.month;
+        int year = graphSelectedDate.year;
+        return expenses.fold(
+          0.0,
+          (prev, exp) {
+            if (exp.date.year == year && exp.date.month == month)
+              return prev + exp.getTotalExpense();
+            return prev;
+          },
+        );
+      case ViewType.Week:
+        var week = weekNumber(graphSelectedDate);
+        var year = graphSelectedDate.year;
+        return expenses.fold(
+          0.0,
+          (prev, exp) {
+            if (exp.date.year == year && weekNumber(exp.date) == week)
+              return prev + exp.getTotalExpense();
+            return prev;
+          },
+        );
+      default:
+        return getSelectedDateTotalPrice(graphSelectedDate);
+    }
   }
 
   // #endregion

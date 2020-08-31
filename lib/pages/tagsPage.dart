@@ -39,95 +39,111 @@ class TagsPage extends HookWidget {
     return Scaffold(
       body: SafeArea(
         child: Container(
-          height: double.infinity,
-          color: Color(0xfff9f9f9),
-          child: Column(
-            children: <Widget>[
-              Stack(
+          child: SingleChildScrollView(
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              color: Color(0xfff9f9f9),
+              child: Column(
                 children: <Widget>[
-                  Container(
-                    width: double.infinity,
-                    height: kHeight + 20,
+                  Stack(
+                    children: <Widget>[
+                      Container(
+                        width: double.infinity,
+                        height: kHeight + 20,
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                        ),
+                        width: double.infinity,
+                        height: kHeight,
+                      ),
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                                color: kDefaultColor,
+                                borderRadius: BorderRadius.circular(5)),
+                            width: 150,
+                            height: 50,
+                            child: Center(
+                              child: Text(
+                                'ADD TAG',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 18,
+                                    letterSpacing: 1.5,
+                                    color: Colors.white.withOpacity(0.8)),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  tagAdder(),
+                  Stack(
+                    children: <Widget>[
+                      Container(
+                        height: kHeight + 20,
+                      ),
+                      Positioned.fill(
+                        top: 25,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                                color: kDefaultColor,
+                                borderRadius: BorderRadius.circular(5)),
+                            width: 150,
+                            height: 50,
+                            child: Center(
+                              child: Text(
+                                'TAGS',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 18,
+                                    letterSpacing: 1.5,
+                                    color: Colors.white.withOpacity(0.8)),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   Container(
+                    width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                     ),
-                    width: double.infinity,
-                    height: kHeight,
-                  ),
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                            color: kDefaultColor,
-                            borderRadius: BorderRadius.circular(5)),
-                        width: 150,
-                        height: 50,
-                        child: Center(
-                          child: Text(
-                            'ADD TAG',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                                letterSpacing: 1.5,
-                                color: Colors.white.withOpacity(0.8)),
-                          ),
-                        ),
-                      ),
+                    child: Text(
+                      'Hint: Swipe Right To Edit, Left To Delete And Click A Tag for more info',
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.w100),
                     ),
+                  ),
+                  Expanded(
+                    child: tagList(),
                   ),
                 ],
               ),
-              tagAdder(),
-              Stack(
-                children: <Widget>[
-                  Container(
-                    height: kHeight + 20,
-                  ),
-                  Positioned.fill(
-                    top: 25,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                            color: kDefaultColor,
-                            borderRadius: BorderRadius.circular(5)),
-                        width: 150,
-                        height: 50,
-                        child: Center(
-                          child: Text(
-                            'TAGS',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                                letterSpacing: 1.5,
-                                color: Colors.white.withOpacity(0.8)),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Expanded(
-                child: tagList(),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -223,6 +239,21 @@ class TagsPage extends HookWidget {
                       ),
                     ),
                   ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    width: store.editTag != null ? null : 0,
+                    child: IconButton(
+                      onPressed: editCancelPressed,
+                      icon: Icon(
+                        Icons.clear,
+                        color: Colors.white,
+                      ),
+                      highlightColor: Colors.red,
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: 20),
@@ -282,8 +313,11 @@ class TagsPage extends HookWidget {
     }
 
     if (conflict == null) return Container();
-    return Text(
-      'Conflict on $conflict',
+    return Container(
+
+      child: Text(
+        'Conflict on $conflict',
+      ),
     );
   }
 
@@ -381,12 +415,21 @@ class TagsPage extends HookWidget {
   }
 
   editButtonPressed() {
-    print('is it working');
     nameController.text = store.editTag.name;
     shortenController.text = store.editTag.shorten;
     currentColor.value = store.editTag.color;
     buttonName.value = store.editTag.name;
     confirmButtonName = 'Update';
+  }
+
+  editCancelPressed() {
+    print('edit cancel');
+    nameController.text = '';
+    shortenController.text = '';
+    currentColor.value = kDefaultColor;
+    buttonName.value = '';
+    confirmButtonName = 'Add';
+    store.editTag = null;
   }
 // #endregion
 

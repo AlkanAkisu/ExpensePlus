@@ -4,40 +4,63 @@ import 'package:tracker_but_fast/models/expense.dart';
 import '../models/tag.dart';
 
 class DummyData {
-  static getData() {
+  static List<Expense> expenses() {
     return [
       new Expense(
-        name: 'Taksi',
+        name: 'Taxi',
         tags: [
           new Tag(
-            name: 'ulasim',
-            hexCode: 0xFF2196F3,
-          )
+              name: 'travel', hexCode: Colors.purple[400].value, shorten: 't'),
         ],
-        prices: [15.0],
-        text: 'Taksi .ulasim 15',
-        limit: true,
-        date: DateTime.now(),
+        prices: [25.0],
+        text: 'Taxi .t 15',
+        date: DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        ),
       ),
       new Expense(
-        name: 'Alkol',
+        name: 'Bowling',
+        tags: [
+          new Tag(name: 'bowling', hexCode: Colors.black.value, shorten: 'b'),
+          new Tag(
+              name: 'friends', hexCode: Colors.red[400].value, shorten: 'f'),
+        ],
+        prices: [15.0, 5.0],
+        text: 'Bowling .b .f 30 20',
+        date: DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        ),
+      ),
+      new Expense(
+        name: 'Hangout',
         tags: [
           new Tag(
-            name: 'icki',
-            hexCode: 0xFFF44336 ,
-          ),
-          new Tag(
-            name: 'eglence',
-            hexCode: 0xFF9C27B0,
-          ),
+              name: 'friends', hexCode: Colors.red[400].value, shorten: 'f'),
         ],
-        prices: [30.0, 20.0],
-        text: 'Alkol .icki .eglence 30 20',
-        limit: true,
-        date: DateTime.now(),
+        prices: [45],
+        text: 'Hangout .bowling 45',
+        date: DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        ).add(
+          Duration(
+            days: 1,
+          ),
+        ),
       ),
-    ]..forEach((element) {
+    ];
+  }
 
-      });
+  static List<Tag> tags() {
+    return [
+      new Tag(name: 'travel', hexCode: Colors.purple[400].value, shorten: 't'),
+      new Tag(name: 'bowling', hexCode: Colors.black.value, shorten: 'b'),
+      new Tag(name: 'friends', hexCode: Colors.red[400].value, shorten: 'f'),
+    ];
   }
 }

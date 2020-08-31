@@ -6,12 +6,9 @@ import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tracker_but_fast/database/expense_provider.dart';
-import 'package:tracker_but_fast/database/limit_provider.dart';
-import 'package:tracker_but_fast/database/tag_provider.dart';
 import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:tracker_but_fast/models/expense.dart';
 import 'package:tracker_but_fast/pages/graphPage.dart';
-import 'package:tracker_but_fast/utilities/dummy_data.dart';
 import 'package:tracker_but_fast/utilities/regex.dart';
 import 'package:tracker_but_fast/widgets/expenseTile.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -24,10 +21,9 @@ class TrackPage extends StatefulWidget {
 }
 
 class _TrackPageState extends State<TrackPage> {
-  List<Expense> dummyData = DummyData.getData();
   Map<int, double> opacity = new Map();
   TextEditingController controller;
-  Set<Expense> editing = <Expense>{};
+
   var focusNode = new FocusNode();
   GlobalKey<AnimatedListState> listKey;
   final store = MobxStore.st;
@@ -42,8 +38,6 @@ class _TrackPageState extends State<TrackPage> {
 
   @override
   void dispose() {
-    // Clean up the controller when the widget is removed from the
-    // widget tree.
     controller.dispose();
     super.dispose();
   }
@@ -51,8 +45,7 @@ class _TrackPageState extends State<TrackPage> {
   @override
   void initState() {
     super.initState();
-    editing = <Expense>{};
-    print('track init');
+    store.editing = <Expense>{};
     this.listKey = widget.listKey;
     now = DateTime.now();
     selectedDate = DateTime(now.year, now.month, now.day);
@@ -64,11 +57,16 @@ class _TrackPageState extends State<TrackPage> {
     KeyboardVisibility.onChange.listen((bool visible) {
       isKeyboardActive = visible;
 
-      if (this.mounted && visible && calendarHeight > 0)
+      if (this.mounted && isKeyboardActive && calendarHeight > 0)
         setState(() {
           calendarHeight = 0;
         });
-      if (this.mounted && !visible && showThumbnail)
+      if (this.mounted && !isKeyboardActive && store.editing.isNotEmpty)
+        setState(() {
+          store.editing = {};
+          controller.text = '';
+        });
+      if (this.mounted && !isKeyboardActive && showThumbnail)
         setState(() {
           //TODO text memory do controller.text = oldtext when click back
           showThumbnail = false;
@@ -84,24 +82,34 @@ class _TrackPageState extends State<TrackPage> {
       body: SafeArea(
         child: Container(
           color: const Color(0xfff9f9f9),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              calendarShowSection(),
-              calendar(),
-              expensesListWidget(),
-              totalPriceWidget(),
-              thumbnailWidget(),
-              addPriceWidget(),
-            ],
-          ),
+          child: Observer(builder: (_) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                calendarShowSection(),
+                calendar(),
+                store.selectedDateExpenses.isNotEmpty
+                    ? Text(
+                        'Hint: Swipe Right To Edit, Left To Delete And Click A Tag For More Info',
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w100),
+                      )
+                    : Container(),
+                expensesListWidget(),
+                totalPriceWidget(),
+                thumbnailWidget(),
+                addPriceWidget(),
+              ],
+            );
+          }),
         ),
       ),
     );
   }
 
   //---------------CALENDAR---------------
+  // #region
+
   Widget calendar() {
     return Container(
       height: calendarHeight,
@@ -133,94 +141,101 @@ class _TrackPageState extends State<TrackPage> {
   }
 
   Widget calendarShowSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Colors.blue[700],
-          ),
-          onPressed: calendarHeight != 0
-              ? null
-              : () {
-                  store.updateSelectedDate(store.selectedDate.subtract(
-                    Duration(
-                      days: 1,
-                    ),
-                  ));
-                },
-        ),
-        Expanded(
-          child: Container(
-              padding: const EdgeInsets.all(4.0),
-              margin: const EdgeInsets.only(top: 4),
-              decoration: BoxDecoration(
-                // color: Colors.grey[400],
-                border: Border.all(
-                  color: Colors.blue[700],
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              height: 60,
-              child: GestureDetector(
-                onTap: calendarButtonPressed,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Expanded(
-                      child: Observer(builder: (_) {
-                        var date = store.selectedDate;
-                        return Container(
-                          padding: const EdgeInsets.all(4.0),
-                          margin: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            '${date.day}/${date.month}/${date.year}',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.blue[700],
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        calendarHeight == 0
-                            ? Icons.arrow_drop_down
-                            : Icons.arrow_drop_up,
-                        color: Colors.blue[700],
+    return Observer(builder: (_) {
+      store.selectedDate;
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.arrow_back,
+              color: Colors.blue[700],
+            ),
+            onPressed: calendarHeight != 0
+                ? null
+                : () {
+                    store.updateSelectedDate(store.selectedDate.subtract(
+                      Duration(
+                        days: 1,
                       ),
-                      onPressed: () async => calendarButtonPressed(),
-                    )
-                  ],
-                ),
-              )),
-        ),
-        IconButton(
-          icon: Icon(
-            Icons.arrow_forward,
-            color: Colors.blue[700],
+                    ));
+                  },
           ),
-          onPressed: calendarHeight != 0
-              ? null
-              : () {
-                  store.updateSelectedDate(store.selectedDate.add(
-                    Duration(
-                      days: 1,
-                    ),
-                  ));
-                },
-        ),
-      ],
-    );
+          Expanded(
+            child: Container(
+                padding: const EdgeInsets.all(4.0),
+                margin: const EdgeInsets.only(top: 4),
+                decoration: BoxDecoration(
+                  // color: Colors.grey[400],
+                  border: Border.all(
+                    color: Colors.blue[700],
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                height: 60,
+                child: GestureDetector(
+                  onTap: calendarButtonPressed,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Expanded(
+                        child: Observer(builder: (_) {
+                          var date = store.selectedDate;
+                          return Container(
+                            padding: const EdgeInsets.all(4.0),
+                            margin: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.blue[700],
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          calendarHeight == 0
+                              ? Icons.arrow_drop_down
+                              : Icons.arrow_drop_up,
+                          color: Colors.blue[700],
+                        ),
+                        onPressed: () async => calendarButtonPressed(),
+                      )
+                    ],
+                  ),
+                )),
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.arrow_forward,
+              color: Colors.blue[700],
+            ),
+            onPressed: calendarHeight != 0
+                ? null
+                : () {
+                    store.updateSelectedDate(store.selectedDate.add(
+                      Duration(
+                        days: 1,
+                      ),
+                    ));
+                  },
+          ),
+        ],
+      );
+    });
   }
 
+  // #endregion
+
   //---------------EXPENSES LIST WIDGET---------------
+  // #region
+
   Widget expensesListWidget() {
     return Expanded(
         child: Container(
@@ -237,6 +252,8 @@ class _TrackPageState extends State<TrackPage> {
     return Observer(
       builder: (_) {
         store.selectedDate;
+        store.expenses;
+
         List<Expense> selectedDateExpenses = store.selectedDateExpenses;
 
         return new AnimatedList(
@@ -270,39 +287,8 @@ class _TrackPageState extends State<TrackPage> {
                 ],
                 child: FadeTransition(
                   opacity: anim,
-                  child: Container(
-                    decoration: BoxDecoration(
-                        // borderRadius: BorderRadius.circular(6),
-                        color: Colors.grey[50],
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black54,
-                            offset: Offset(0, 1.5),
-                            blurRadius: 1,
-                          )
-                        ]),
-                    child: Row(
-                      children: <Widget>[
-                        Container(
-                          width: 5,
-                          height: 92,
-                          child: Column(
-                            children: expense.tags
-                                .map(
-                                  (tag) => Expanded(
-                                    child: Container(color: tag.color),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        ),
-                        Expanded(
-                          child: ExpenseTile(
-                            expense: expense,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: ExpenseTile(
+                    expense: expense,
                   ),
                 ),
               ),
@@ -317,47 +303,18 @@ class _TrackPageState extends State<TrackPage> {
     return Opacity(
       opacity: 0.5,
       child: Observer(builder: (_) {
-        var thumbnailExpense = store.thumbnailExpense;
-        if (showThumbnail) {
-          return Container(
-            decoration: BoxDecoration(
-                // borderRadius: BorderRadius.circular(6),
-                color: Colors.grey[50],
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black54,
-                    offset: Offset(0, 1.5),
-                    blurRadius: 1,
-                  )
-                ]),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 10,
-                  height: 92,
-                  child: Column(
-                    children: thumbnailExpense?.tags
-                            ?.map(
-                              (tag) => Expanded(
-                                child: Container(color: tag.color),
-                              ),
-                            )
-                            ?.toList() ??
-                        [
-                          Expanded(
-                            child: Container(color: Tag.otherTag.color),
-                          ),
-                        ],
-                  ),
-                ),
-                Expanded(
-                  child: ExpenseTile(
-                    expense: thumbnailExpense,
-                    isThumbnail: true,
-                  ),
-                ),
-              ],
+        if (store.thumbnailExpense == null)
+          store.setThumbnailExpense(
+            Expense(
+              tags: [Tag.otherTag],
+              name: 'other',
+              prices: [0.0],
             ),
+          );
+
+        if (showThumbnail) {
+          return ExpenseTile(
+            expense: store.thumbnailExpense,
           );
         } else {
           return Container();
@@ -370,7 +327,7 @@ class _TrackPageState extends State<TrackPage> {
     return Observer(builder: (_) {
       store.selectedDate;
       store.limitMap;
-
+      store.editing;
 
       var totalPrice = store.getSelectedDateTotalPrice();
 
@@ -397,7 +354,7 @@ class _TrackPageState extends State<TrackPage> {
           ),
           borderRadius: BorderRadius.circular(12),
         ),
-        height: 60,
+        height: !showThumbnail ? 60 : 0,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -418,7 +375,9 @@ class _TrackPageState extends State<TrackPage> {
     });
   }
 
+  // #endregion
   //---------------ADD PRICE TEXT FIELD---------------
+
   Widget addPriceWidget() {
     controller = TextEditingController();
 
@@ -434,57 +393,85 @@ class _TrackPageState extends State<TrackPage> {
         borderRadius: BorderRadius.circular(12),
       ),
       height: 80,
-      child: Center(
-        child: TextField(
-          onChanged: (text) async {
-            store.setThumbnailExpense(
-              await Regex.doRegex(
-                text,
-                store.selectedDate,
-                false,
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: TextField(
+              onChanged: (text) async {
+                store.setThumbnailExpense(
+                  await Regex.doRegex(
+                    text,
+                    store.selectedDate,
+                    false,
+                  ),
+                );
+              },
+              onTap: () {
+                if (store.editing.isNotEmpty) return;
+
+                if (calendarHeight == null)
+                  setState(() {
+                    calendarHeight = 0;
+                  });
+
+                if (!showThumbnail) {
+                  showThumbnail = true;
+
+                  setState(() {});
+                }
+              },
+              focusNode: focusNode,
+              textInputAction: TextInputAction.send,
+              controller: controller,
+              maxLines: null,
+              minLines: null,
+              onSubmitted: (value) => textFieldSubmitted(controller),
+              textAlignVertical: TextAlignVertical.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 1.6,
               ),
-            );
-          },
-          onTap: () async {
-            if (editing.isNotEmpty) return;
-
-            if (calendarHeight == null)
-              setState(() {
-                calendarHeight = 0;
-              });
-
-            if (!showThumbnail) {
-              showThumbnail = true;
-              setState(() {});
-            }
-          },
-          focusNode: focusNode,
-          textInputAction: TextInputAction.send,
-          controller: controller,
-          maxLines: null,
-          minLines: null,
-          onSubmitted: (value) => textFieldSubmitted(controller),
-          textAlignVertical: TextAlignVertical.center,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w400,
-            letterSpacing: 1.6,
+              decoration: InputDecoration(
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  hintText: 'Enter a expense',
+                  helperText:
+                      ' . prefix to add tag (.travel .food) or shorten it (.t .f)'),
+            ),
           ),
-          decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              hintText: 'Enter a expense',
-              helperText:
-                  ' . prefix to add tag (.travel .food) or shorten it (.t .f)'),
-        ),
+          editCancelButton(),
+        ],
       ),
     );
   }
 
+  Widget editCancelButton() {
+    return Observer(builder: (_) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red[400],
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 7),
+        width: store.editing.isNotEmpty ? null : 0,
+        child: IconButton(
+          onPressed: editCancelPressed,
+          icon: Icon(
+            Icons.clear,
+            color: Colors.white,
+          ),
+          highlightColor: Colors.red,
+        ),
+      );
+    });
+  }
   //
   //--------------LOGIC--------------
+
   // #region Logic
 
-  void textFieldSubmitted(TextEditingController controller) async {
+  textFieldSubmitted(TextEditingController controller) async {
     Expense regexExpense = await Regex.doRegex(
       controller.text,
       store.selectedDate,
@@ -496,21 +483,18 @@ class _TrackPageState extends State<TrackPage> {
 
     controller.text = '';
 
-    if (editing.isNotEmpty) {
+    if (store.editing.isNotEmpty) {
       //EDITING PART
 
       Expense expenseToAdd = regexExpense;
-      expenseToAdd.id = editing.first.id;
+      expenseToAdd.id = store.editing.first.id;
 
-      await ExpenseProvider.db.update(expenseToAdd);
-      store.updateExpense(expenseToAdd);
-      editing.clear();
+      store.updateExpense(expenseToAdd, setDatabase: true);
+      store.editing = {};
     } else {
       //ADDING PART
 
-      await ExpenseProvider.db.createExpense(regexExpense);
-
-      store.addExpense(regexExpense);
+      store.addExpense(regexExpense, setDatabase: true);
 
       if (isSelectedDate(regexExpense))
         listKey.currentState.insertItem(store.selectedDateExpenses.length - 1);
@@ -520,7 +504,7 @@ class _TrackPageState extends State<TrackPage> {
     setState(() {});
   }
 
-  void deleteButtonPressed(int id) {
+  deleteButtonPressed(int id) {
     Expense expense =
         store.selectedDateExpenses.firstWhere((element) => element.id == id);
 
@@ -529,29 +513,8 @@ class _TrackPageState extends State<TrackPage> {
     AnimatedListRemovedItemBuilder builder = (context, anim) {
       return FadeTransition(
         opacity: anim,
-        child: Container(
-          // margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                width: 1,
-                color: Colors.black,
-              ),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black87,
-                blurRadius: 6,
-                offset: Offset(0, 1),
-              )
-            ],
-            // borderRadius: BorderRadius.circular(12),
-            color: Colors.blue[200],
-          ),
-          child: ExpenseTile(
-            expense: expense,
-          ),
+        child: ExpenseTile(
+          expense: expense,
         ),
       );
     };
@@ -565,13 +528,16 @@ class _TrackPageState extends State<TrackPage> {
     setState(() {});
   }
 
-  void editButtonPressed(int id) {
+  editButtonPressed(int id) {
     Expense expense = store.selectedDateExpenses.firstWhere(
       (element) => element.id == id,
     );
 
-    editing = {expense};
+    store.editing = {expense};
     focusNode.requestFocus();
+
+    //to set state of total expense widget
+    store.selectedDate = DateTime.parse(store.selectedDate.toIso8601String());
 
     controller.text = expense.text;
 
@@ -600,6 +566,12 @@ class _TrackPageState extends State<TrackPage> {
     return exp.date.year == store.selectedDate.year &&
         exp.date.month == store.selectedDate.month &&
         exp.date.day == store.selectedDate.day;
+  }
+
+  editCancelPressed() {
+    store.editing = {};
+    focusNode.unfocus();
+    controller.text = '';
   }
 // #endregion
 

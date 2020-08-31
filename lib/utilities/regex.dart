@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:tracker_but_fast/models/tag.dart';
 import 'package:tracker_but_fast/models/expense.dart';
@@ -8,7 +7,8 @@ class Regex {
   //REGEX
   static RegExp priceRegex =
       RegExp(r'((?<=\s|^)\d+\.*\d*(?=\s|$))', caseSensitive: false);
-  static RegExp tagRegex = RegExp(r'(?<=\.)(\S+)', caseSensitive: false);
+  static RegExp tagRegex =
+      RegExp(r'(?:(?:^|[\s]+)\.([^\.\s]+))', caseSensitive: false);
   static RegExp limitRegex = RegExp(r'(-lim+)', caseSensitive: false);
   static RegExp dateRegex = RegExp(
       r'(?<=#)(([0-9]+)+([a-z]+))|(?<=#)([a-z]+)|(?<=#)(\d+\.*\d*)',
@@ -59,42 +59,36 @@ class Regex {
 
     str = str.trim();
 
-    priceRegex.allMatches(str).forEach((el) {
-      prices.add(double.parse(double.parse(el[0]).toStringAsFixed(2)));
-    });
+    priceRegex.allMatches(str).forEach(
+      (el) {
+        prices.add(double.parse(double.parse(el[1]).toStringAsFixed(2)));
+      },
+    );
     str = str.replaceAll(priceRegex, '');
 
-    if (tagRegex.allMatches(str).isEmpty) tags = [Tag.other()];
-
-    for (final el in tagRegex.allMatches(str)) {
-      Tag tag = MobxStore.st.getTagByName(el[0]);
-      if (tag == null) {
-        tag = new Tag(
-          name: el[0],
-        );
-        if (submitted) {
-          await TagProvider.db.addTag(tag);
-          MobxStore.st.addTag(tag);
-        }
-      }
-      tags.add(tag);
-
-    }
-
-    str = str.replaceAll(tagRegex, '');
-
-
     dateRegex.allMatches(str).forEach((el) {
-
       //#29 #9.12 style
       if (el[5] != null) {
         final map = el[5].split('.').asMap();
+        int month;
+        if (map[1] != null) {
+          if (map[1].isNotEmpty) month = int.parse(map[1]);
+        }
+        month ??= DateTime.now().month;
+        int day = int.parse(map[0]);
+
 
         date = new DateTime(
           DateTime.now().year,
-          int.parse(map[1] ?? DateTime.now().month.toString()),
-          int.parse(map[0]),
+          month,
+          day,
         );
+
+        //todo wrong date entered handle it
+        if (date.month != month || date.day != day) {
+
+          date = selectedDate;
+        }
       } else {
         var howMany = el[2] != null ? int.parse(el[2]) : 1;
         var keyword = el[3] ?? el[4];
@@ -104,14 +98,32 @@ class Regex {
         };
 
         date = dateFormatter(map);
-
       }
     });
     date ??= selectedDate;
     str = str.replaceAll(dateRegex, '');
 
+    //TAG
+    if (tagRegex.allMatches(str).isEmpty) tags = [Tag.other()];
+
+    
+
+    for (final el in tagRegex.allMatches(str)) {
+      String name = el[1];
+      Tag tag = MobxStore.st.getTagByName(name);
+      if (tag == null) {
+        tag = new Tag(
+          name: name,
+        );
+        if (submitted) MobxStore.st.addTag(tag, setDatabase: true);
+      }
+      tags.add(tag);
+    }
+
+    str = str.replaceAll(tagRegex, '');
+
     limitRegex.allMatches(str).forEach((el) {
-      if (el[0] != null) limit = false;
+      if (el[1] != null) limit = false;
       str = str.replaceRange(el.start, el.end, '');
     });
 
@@ -119,8 +131,7 @@ class Regex {
     str = str.replaceAll(new RegExp(r'[\.|#]+'), '');
     str = str.trim();
 
-
-    name = str.isEmpty ? tags.map((e) => e.name).join(' ') : str;
+    name = str.isEmpty || str == null ? tags.map((e) => e.name).join(' ') : str;
     prices = prices.isEmpty ? [0] : prices;
 
     limit ??= true;

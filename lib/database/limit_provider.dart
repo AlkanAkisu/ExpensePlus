@@ -48,20 +48,24 @@ class LimitProvider {
           await database,
         );
 
-    if (val == null)
+    if (val == null) {
       await updateLimit({
         ViewType.Day: null,
         ViewType.Week: null,
         ViewType.Month: null,
       });
+      return <ViewType, double>{
+        ViewType.Day: null,
+        ViewType.Week: null,
+        ViewType.Month: null,
+      };
+    }
 
-    Map<ViewType, double> rv = {
+    return <ViewType, double>{
       ViewType.Day: val['day'],
       ViewType.Week: val['week'],
       ViewType.Month: val['month'],
     };
-
-    return rv;
   }
 
   Future<void> updateIsAutomatic(bool isAutomatic) async {
@@ -104,5 +108,28 @@ class LimitProvider {
       return false;
     }
     return val['useLimit'];
+  }
+
+  Future<bool> isFirstTime() async {
+    final val = await _limitStore.record(3).get(
+          await database,
+        );
+
+    if (val == null) {
+      await _limitStore.record(3).put(
+        await database,
+        {
+          'firstTime': false,
+        },
+      );
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> resetFirstTime() async {
+    await _limitStore.record(3).delete(
+          await database,
+        );
   }
 }

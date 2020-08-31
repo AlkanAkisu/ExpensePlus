@@ -7,7 +7,7 @@
          FlutterApplication and put your custom class here. -->
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="tracker_but_fast"
+        android:label="Expense Plus"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

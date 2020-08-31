@@ -3,6 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:tracker_but_fast/models/expense.dart';
 import 'package:tracker_but_fast/expenses_store.dart';
 import 'package:tracker_but_fast/models/tag.dart';
+import 'package:tracker_but_fast/pages/tagDetailPage.dart';
 
 class ExpenseTile extends StatefulWidget {
   Expense expense;
@@ -21,7 +22,40 @@ class ExpenseTile extends StatefulWidget {
 class _ExpenseTileState extends State<ExpenseTile> {
   @override
   Widget build(BuildContext context) {
-    return expenseTile(widget.expense);
+    return Container(
+      decoration: BoxDecoration(
+          // borderRadius: BorderRadius.circular(6),
+          color: Colors.grey[50],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black54,
+              offset: Offset(0, 1.5),
+              blurRadius: 1,
+            )
+          ]),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 5,
+            height: 92,
+            child: Column(
+              children: widget.expense.tags
+                  .map(
+                    (tag) => Expanded(
+                      child: Container(color: tag.color),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          Expanded(
+            child: expenseTile(
+              widget.expense,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget expenseTile(Expense expense) {
@@ -84,29 +118,36 @@ class _ExpenseTileState extends State<ExpenseTile> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: expense.tags.map((tag) {
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
-              margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 3),
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
+            return GestureDetector(
+              onTap: () => MobxStore.st.navigatorKey.currentState.push(
+                MaterialPageRoute(
+                  builder: (_) => TagDetailPage(tag),
+                ),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
+                margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 3),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: tag.color,
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      )
+                    ],
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(
                       color: tag.color,
-                      blurRadius: 2,
-                      offset: Offset(0, 1),
-                    )
-                  ],
-                  borderRadius: BorderRadius.circular(3),
-                  border: Border.all(
+                      width: 1,
+                    )),
+                child: Text(
+                  tag.name,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                     color: tag.color,
-                    width: 1,
-                  )),
-              child: Text(
-                tag.name,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: tag.color,
+                  ),
                 ),
               ),
             );
@@ -126,40 +167,45 @@ class _ExpenseTileState extends State<ExpenseTile> {
         children: <Widget>[
           SingleChildScrollView(
             scrollDirection: Axis.vertical,
-            child: Column(
-              children: expense.prices.map((price) {
-                return Container(
-                  constraints: BoxConstraints(
-                    minWidth: 30,
-                    minHeight: 30,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black87,
-                        blurRadius: 1,
-                        offset: Offset(0, 1),
-                      )
-                    ],
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Center(
-                    child: Text(
-                      price.toString(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.blue[700],
+            child: Builder(
+              builder: (bc) {
+                if (expense.prices.length <= 1) return Container();
+                return Column(
+                  children: expense.prices.map((price) {
+                    return Container(
+                      constraints: BoxConstraints(
+                        minWidth: 30,
+                        minHeight: 30,
                       ),
-                    ),
-                  ),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 3, horizontal: 4),
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 6),
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black87,
+                            blurRadius: 1,
+                            offset: Offset(0, 1),
+                          )
+                        ],
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: Center(
+                        child: Text(
+                          price.toString(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 );
-              }).toList(),
+              },
             ),
           ),
           SizedBox(
