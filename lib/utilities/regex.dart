@@ -1,7 +1,7 @@
-import 'package:tracker_but_fast/expenses_store.dart';
-import 'package:tracker_but_fast/models/tag.dart';
-import 'package:tracker_but_fast/models/expense.dart';
-import 'package:tracker_but_fast/database/tag_provider.dart';
+import 'package:expensePlus/expenses_store.dart';
+import 'package:expensePlus/models/tag.dart';
+import 'package:expensePlus/models/expense.dart';
+import 'package:expensePlus/database/tag_provider.dart';
 
 class Regex {
   //REGEX
@@ -106,7 +106,7 @@ class Regex {
     //TAG
     if (tagRegex.allMatches(str).isEmpty) tags = [Tag.other()];
 
-    
+
 
     for (final el in tagRegex.allMatches(str)) {
       String name = el[1];

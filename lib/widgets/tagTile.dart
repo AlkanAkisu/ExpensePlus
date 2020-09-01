@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:tracker_but_fast/expenses_store.dart';
-import 'package:tracker_but_fast/models/tag.dart';
-import 'package:tracker_but_fast/pages/tagDetailPage.dart';
+import 'package:expensePlus/expenses_store.dart';
+import 'package:expensePlus/models/tag.dart';
+import 'package:expensePlus/pages/tagDetailPage.dart';
 
 class TagTile extends StatelessWidget {
   const TagTile({

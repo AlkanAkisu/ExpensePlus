@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:tracker_but_fast/expenses_store.dart';
-import 'package:tracker_but_fast/models/tag.dart';
-import 'package:tracker_but_fast/pages/tagDetailPage.dart';
+import 'package:expensePlus/expenses_store.dart';
+import 'package:expensePlus/models/tag.dart';
+import 'package:expensePlus/pages/tagDetailPage.dart';
+
+
+
 
 class GraphPage extends StatefulWidget {
   GraphPage({Key key}) : super(key: key);
@@ -202,7 +205,6 @@ class _GraphPageState extends State<GraphPage>
                 indicator: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: Colors.blue[100],
-
                 ),
                 indicatorWeight: 3,
                 tabs: [

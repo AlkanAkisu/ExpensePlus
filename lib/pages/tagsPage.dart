@@ -2,11 +2,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:tracker_but_fast/database/tag_provider.dart';
-import 'package:tracker_but_fast/expenses_store.dart';
+import 'package:expensePlus/database/tag_provider.dart';
+import 'package:expensePlus/expenses_store.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:tracker_but_fast/models/tag.dart';
-import 'package:tracker_but_fast/widgets/tagTile.dart';
+import 'package:expensePlus/models/tag.dart';
+import 'package:expensePlus/widgets/tagTile.dart';
 
 class TagsPage extends HookWidget {
   BuildContext context;
@@ -314,7 +314,6 @@ class TagsPage extends HookWidget {
 
     if (conflict == null) return Container();
     return Container(
-
       child: Text(
         'Conflict on $conflict',
       ),

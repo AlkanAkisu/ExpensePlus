@@ -3,10 +3,10 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
-import 'package:tracker_but_fast/database/expense_provider.dart';
-import 'package:tracker_but_fast/expenses_store.dart';
-import 'package:tracker_but_fast/models/expense.dart';
-import 'package:tracker_but_fast/models/tag.dart';
+import 'package:expensePlus/database/expense_provider.dart';
+import 'package:expensePlus/expenses_store.dart';
+import 'package:expensePlus/models/expense.dart';
+import 'package:expensePlus/models/tag.dart';
 
 class TagProvider {
   static Database _database;

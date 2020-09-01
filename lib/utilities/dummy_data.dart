@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracker_but_fast/models/expense.dart';
+import 'package:expensePlus/models/expense.dart';
 
 import '../models/tag.dart';
 

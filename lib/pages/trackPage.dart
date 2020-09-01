@@ -5,14 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:tracker_but_fast/database/expense_provider.dart';
-import 'package:tracker_but_fast/expenses_store.dart';
-import 'package:tracker_but_fast/models/expense.dart';
-import 'package:tracker_but_fast/pages/graphPage.dart';
-import 'package:tracker_but_fast/utilities/regex.dart';
-import 'package:tracker_but_fast/widgets/expenseTile.dart';
+import 'package:expensePlus/database/expense_provider.dart';
+import 'package:expensePlus/expenses_store.dart';
+import 'package:expensePlus/models/expense.dart';
+import 'package:expensePlus/pages/graphPage.dart';
+import 'package:expensePlus/utilities/regex.dart';
+import 'package:expensePlus/widgets/expenseTile.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:tracker_but_fast/models/tag.dart';
+import 'package:expensePlus/models/tag.dart';
 
 class TrackPage extends StatefulWidget {
   @override

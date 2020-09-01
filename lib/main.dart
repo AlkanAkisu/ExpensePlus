@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:tracker_but_fast/database/expense_provider.dart';
-import 'package:tracker_but_fast/models/tag.dart';
-import 'package:tracker_but_fast/pages/tagDetailPage.dart';
-import 'package:tracker_but_fast/utilities/dummy_data.dart';
+import 'package:expensePlus/database/expense_provider.dart';
+import 'package:expensePlus/utilities/dummy_data.dart';
 
-import 'database/limit_provider.dart';
-import 'database/tag_provider.dart';
-import 'expenses_store.dart';
-import 'pages/graphPage.dart';
-import 'pages/settingsPage.dart';
-import 'pages/tagsPage.dart';
-import 'pages/trackPage.dart';
+
+import 'package:expensePlus/database/limit_provider.dart';
+import 'package:expensePlus/database/tag_provider.dart';
+import 'package:expensePlus/expenses_store.dart';
+import 'package:expensePlus/pages/graphPage.dart';
+import 'package:expensePlus/pages/settingsPage.dart';
+import 'package:expensePlus/pages/tagsPage.dart';
+import 'package:expensePlus/pages/trackPage.dart';
 
 void main() {
   runApp(MyApp());
@@ -48,7 +47,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'Tracker But Fast',
+      title: 'Expense Plus',
       home: SafeArea(
         child: Builder(
           builder: (context) {
@@ -80,7 +79,7 @@ class _MyAppState extends State<MyApp> {
     return AppBar(
       backgroundColor: Colors.grey[700],
       title: Text(
-        'Tracker But Fast',
+        'Expense Plus',
         style: TextStyle(
           fontSize: 20,
         ),
@@ -153,7 +152,7 @@ class _MyAppState extends State<MyApp> {
                 color: Colors.white,
               ),
               Text(
-                'TRACKER\nBUT FAST',
+                'EXPENSE PLUS',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 48,

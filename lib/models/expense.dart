@@ -1,4 +1,4 @@
-import 'package:tracker_but_fast/expenses_store.dart';
+import 'package:expensePlus/expenses_store.dart';
 
 import 'tag.dart';
 

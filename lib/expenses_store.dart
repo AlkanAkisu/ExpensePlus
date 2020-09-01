@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
-import 'package:tracker_but_fast/database/expense_provider.dart';
-import 'package:tracker_but_fast/database/limit_provider.dart';
-import 'package:tracker_but_fast/database/tag_provider.dart';
-import 'package:tracker_but_fast/models/tag.dart';
-import 'package:tracker_but_fast/models/expense.dart';
-import 'package:tracker_but_fast/pages/graphPage.dart';
+import 'package:expensePlus/database/expense_provider.dart';
+import 'package:expensePlus/database/limit_provider.dart';
+import 'package:expensePlus/database/tag_provider.dart';
+import 'package:expensePlus/models/tag.dart';
+import 'package:expensePlus/models/expense.dart';
+import 'package:expensePlus/pages/graphPage.dart';
 
 part 'expenses_store.g.dart';
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:tracker_but_fast/expenses_store.dart';
-import 'package:tracker_but_fast/models/expense.dart';
-import 'package:tracker_but_fast/models/tag.dart';
-import 'package:tracker_but_fast/widgets/expenseTile.dart';
+import 'package:expensePlus/expenses_store.dart';
+import 'package:expensePlus/models/expense.dart';
+import 'package:expensePlus/models/tag.dart';
+import 'package:expensePlus/widgets/expenseTile.dart';
 
 class TagDetailPage extends HookWidget {
   TagDetailPage(this.tag);

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:tracker_but_fast/database/expense_provider.dart';
-import 'package:tracker_but_fast/database/limit_provider.dart';
-import 'package:tracker_but_fast/database/tag_provider.dart';
-import 'package:tracker_but_fast/pages/graphPage.dart';
+import 'package:expensePlus/database/expense_provider.dart';
+import 'package:expensePlus/database/limit_provider.dart';
+import 'package:expensePlus/database/tag_provider.dart';
+import 'package:expensePlus/pages/graphPage.dart';
 
 import '../expenses_store.dart';
 
