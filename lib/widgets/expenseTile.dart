@@ -1,9 +1,9 @@
+import 'package:expensePlus/models/tag.dart';
+import 'package:expensePlus/pages/tagDetailPage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+
 import 'package:expensePlus/models/expense.dart';
 import 'package:expensePlus/expenses_store.dart';
-import 'package:expensePlusls/tag.dart';
-import 'package:expensePluss/tagDetailPage.dart';
 
 class ExpenseTile extends StatefulWidget {
   Expense expense;
