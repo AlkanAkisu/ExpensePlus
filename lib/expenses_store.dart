@@ -44,6 +44,10 @@ abstract class MobxStoreBase with Store {
   Set<Expense> editing = <Expense>{};
   @observable
   int currentIndex = 1;
+  @observable
+  bool firstTime = false;
+  @observable
+  bool introDone = false;
 
   GlobalKey<NavigatorState> navigatorKey;
   // #endregion
@@ -60,6 +64,7 @@ abstract class MobxStoreBase with Store {
     if (isSelectedDate(expense, selectedDate))
       selectedDateExpenses = [...selectedDateExpenses, expense];
     if (setDatabase) ExpenseProvider.db.createExpense(expense);
+    updateGraphSelectedDate(graphSelectedDate);
   }
 
   @action
@@ -76,12 +81,16 @@ abstract class MobxStoreBase with Store {
   void deleteExpense(Expense expense) {
     // expenses.removeWhere((element) => element.id == expense.id);
     expenses = expenses.where((e) => e.id != expense.id).toList();
+    tags = List.from(tags);
 
     if (isSelectedDate(expense, selectedDate))
       selectedDateExpenses = selectedDateExpenses
           .where((element) => element.id != expense.id)
           .toList();
     print('STORE:\texpense deleted ${expense.name}');
+
+    updateGraphSelectedDate(graphSelectedDate);
+    print('All expenses STORE=>$expenses');
   }
 
   @action
@@ -202,17 +211,24 @@ abstract class MobxStoreBase with Store {
 
   @action
   void updateTag(Tag tagToUpdate, {bool setDatabase = false}) {
-    tags = tags.map((e) {
-      if (e.id == tagToUpdate.id) return tagToUpdate;
-      return e;
+    tags = tags.map((tag) {
+      if (tag.id == tagToUpdate.id) return tagToUpdate;
+      return tag;
     }).toList();
+
+    bool found = false;
     for (var expense in expenses) {
-      var tags = expense.tags;
-      expense.tags = tags.map((tag) {
-        if (tag.name == tagToUpdate.name) return tagToUpdate;
-        return tag;
-      }).toList();
-      if (expense.tags.any((tag) => tag.name == tagToUpdate.name)) {
+      expense.tags = expense.tags.map(
+        (tag) {
+          if (tag.id == tagToUpdate.id) {
+            found = true;
+            return tagToUpdate;
+          }
+          return tag;
+        },
+      ).toList();
+
+      if (found) {
         updateExpense(expense);
         ExpenseProvider.db.update(expense);
       }
@@ -255,11 +271,12 @@ abstract class MobxStoreBase with Store {
   // #region GRAPH
   @action
   void updateGraphSelectedDate(DateTime inputSelectedDate) {
-    selectedDate = DateTime.parse(selectedDate.toIso8601String());
-    graphSelectedDate = inputSelectedDate;
+    // selectedDate = DateTime.parse(selectedDate.toIso8601String());
+
+    selectedDate = inputSelectedDate ?? graphSelectedDate;
+    graphSelectedDate = inputSelectedDate ?? graphSelectedDate;
 
     graphSelectedDateExpenses = {
-      ...graphSelectedDateExpenses,
       ViewType.Day: expenses
           .where(
             (element) => isSelectedDate(element, graphSelectedDate),
@@ -358,9 +375,13 @@ abstract class MobxStoreBase with Store {
   @action
   Future<void> setLimit(ViewType viewType, double limit,
       {bool setDatabase = false}) async {
-    var newmap = limitMap;
-    newmap[viewType] = limit;
-    limitMap = newmap;
+    limitMap = {...limitMap, viewType: limit};
+    if (viewType == ViewType.Month && isAutomatic && limit == null)
+      limitMap = {
+        ViewType.Day: null,
+        ViewType.Month: null,
+        ViewType.Week: null
+      };
     if (setDatabase) await LimitProvider.db.updateLimit(limitMap);
   }
 

@@ -91,9 +91,7 @@ class SettingsPage extends HookWidget {
                               store.automaticSet(setDatabase: true);
                           }
                         : null,
-                  )
-                  //todo implent
-                  ,
+                  ),
                   title: Text(
                     'Automatic Limits By Month',
                     style: TextStyle(
@@ -107,21 +105,21 @@ class SettingsPage extends HookWidget {
                   thickness: 1,
                 ),
                 ListTile(
-                  enabled: store.isUseLimit ?? false,
-                  title: Text(
-                    'Configure Monthly Limit',
-                    style: TextStyle(
-                      fontSize: 18,
-                      letterSpacing: 0.3,
-                      fontWeight: FontWeight.w400,
+                    enabled: store.isUseLimit ?? false,
+                    title: Text(
+                      'Configure Monthly Limit',
+                      style: TextStyle(
+                        fontSize: 18,
+                        letterSpacing: 0.3,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                  subtitle: Text(
-                    store.limitMap[ViewType.Month]?.toString() ??
-                        'Not configured',
-                  ),
-                  onTap: () => configureLimit(context, ViewType.Month),
-                ),
+                    subtitle: Text(
+                      store.limitMap[ViewType.Month]?.toString() ??
+                          'Not configured',
+                    ),
+                    onTap: () => configureLimit(context, ViewType.Month),
+                    trailing: deleteLimitButton(ViewType.Month)),
                 Divider(
                   thickness: 1,
                 ),
@@ -140,6 +138,7 @@ class SettingsPage extends HookWidget {
                         'Not configured',
                   ),
                   onTap: () => configureLimit(context, ViewType.Week),
+                  trailing: deleteLimitButton(ViewType.Week),
                 ),
                 Divider(
                   thickness: 1,
@@ -159,6 +158,7 @@ class SettingsPage extends HookWidget {
                         'Not configured',
                   ),
                   onTap: () => configureLimit(context, ViewType.Day),
+                  trailing: deleteLimitButton(ViewType.Day),
                 ),
                 Divider(
                   thickness: 1,
@@ -287,11 +287,13 @@ class SettingsPage extends HookWidget {
   }
 
   Future<void> configureLimit(BuildContext bc, ViewType viewType) async {
+    var amountEntered;
     TextStyle style = new TextStyle(
       fontSize: 18,
       letterSpacing: 1,
     );
 
+    final controller = TextEditingController();
     amount.value = await showDialog(
       context: bc,
       builder: (context) {
@@ -306,11 +308,19 @@ class SettingsPage extends HookWidget {
             SimpleDialogOption(
               padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
               child: TextField(
+                controller: controller,
                 keyboardType: TextInputType.number,
-                onSubmitted: (data) => Navigator.pop(
-                  context,
-                  double.parse(data),
-                ),
+                onSubmitted: (data) {
+                  print('onSubmit $data');
+                  amountEntered = data;
+                  if (data.isEmpty)
+                    Navigator.pop(context, null);
+                  else
+                    Navigator.pop(
+                      context,
+                      double.parse(data),
+                    );
+                },
                 decoration: InputDecoration(
                   contentPadding:
                       EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -325,14 +335,17 @@ class SettingsPage extends HookWidget {
             ),
             SimpleDialogOption(
               onPressed: () {
-                Navigator.pop(context, null);
+                amountEntered = null;
+                if (controller.text.isNotEmpty && controller.text != null)
+                  amountEntered = double.parse(controller.text);
+                Navigator.pop(context, amountEntered);
               },
               child: Center(
                 child: Container(
                   padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.red[100]),
+                  decoration: BoxDecoration(color: Colors.green[100]),
                   child: Text(
-                    'Cancel',
+                    'Submit',
                     style: style,
                   ),
                 ),
@@ -358,6 +371,36 @@ class SettingsPage extends HookWidget {
         ViewType.Month: 'Monthly',
         ViewType.Week: 'Weekly,'
       }[vt];
+
+  Widget deleteLimitButton(ViewType type) {
+    bool disabled = false;
+    if (type != ViewType.Month && store.isAutomatic) disabled = true;
+    if (store.limitMap[type] == null) disabled = true;
+    if (!store.isUseLimit) disabled = true;
+    const double kSize = 40;
+    return Container(
+      decoration: BoxDecoration(
+        color: !disabled ? Colors.red[400] : Colors.grey[400],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: IconButton(
+        constraints: BoxConstraints(
+          maxHeight: kSize,
+          maxWidth: kSize,
+        ),
+        onPressed: !disabled
+            ? () {
+                store.setLimit(type, null);
+              }
+            : null,
+        icon: Icon(
+          Icons.clear,
+          color: Colors.white,
+        ),
+        highlightColor: Colors.red,
+      ),
+    );
+  }
 
 // #endregion
 

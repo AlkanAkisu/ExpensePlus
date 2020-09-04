@@ -10,6 +10,7 @@ class TagDetailPage extends HookWidget {
 
   final Tag tag;
   final store = MobxStore.st;
+  ValueNotifier<bool> isExpensesExist;
   ValueNotifier<List<Tag>> checkboxs;
   ValueNotifier<DateTime> from;
   ValueNotifier<DateTime> to;
@@ -19,6 +20,7 @@ class TagDetailPage extends HookWidget {
     checkboxs = useState([tag]);
     from = useState(null);
     to = useState(null);
+    isExpensesExist = useState(expensesNeedsShow().isNotEmpty);
 
     return Scaffold(
       appBar: AppBar(
@@ -37,10 +39,13 @@ class TagDetailPage extends HookWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               filterSection(context),
-              Text(
-                'Hint: Click An Expense To Go Add Expense Page',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w100),
-              ),
+              isExpensesExist.value
+                  ? Text(
+                      'Hint: Click An Expense To Go Add Expense Page',
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.w200),
+                    )
+                  : Container(),
               tagExpenseList(),
             ],
           ),
@@ -79,17 +84,27 @@ class TagDetailPage extends HookWidget {
                   ),
                 ),
               ),
-              Container(
-                width: 180,
-                child: filterBox(
-                  onTap: () async => await handleMultipleTagSelection(context),
-                  text: 'Select Multiple Tags',
+              Expanded(
+                child: Container(
+                  constraints: BoxConstraints(
+                    minWidth: 160,
+                  ),
+                  child: filterBox(
+                    onTap: () async =>
+                        await handleMultipleTagSelection(context),
+                    text: 'Select Tags',
+                  ),
                 ),
               ),
               Expanded(
-                child: filterBox(
-                  onTap: () async => await handleDateSelection(context),
-                  text: 'Select Dates',
+                child: Container(
+                  constraints: BoxConstraints(
+                    minWidth: 120,
+                  ),
+                  child: filterBox(
+                    onTap: () async => await handleDateSelection(context),
+                    text: 'Select Dates',
+                  ),
                 ),
               ),
             ],
@@ -143,25 +158,7 @@ class TagDetailPage extends HookWidget {
   }
 
   Widget tagExpenses() {
-    List<Expense> selectedExpense = store.expenses.fold(
-      [],
-      (prev, exp) {
-        if (needsToShow(exp)) return [...prev, exp];
-        return prev;
-      },
-    );
-
-    Map<DateTime, List<Expense>> map = selectedExpense.fold(
-      {},
-      (prev, exp) {
-        DateTime date = exp.date;
-        if (prev[date] == null) prev[date] = [];
-        prev[date].add(exp);
-        return prev;
-      },
-    );
-
-    List<MapEntry<DateTime, List<Expense>>> entries = map.entries.toList();
+    List<MapEntry<DateTime, List<Expense>>> entries = expensesNeedsShow();
 
     entries.sort((me1, me2) => me1.key.compareTo(me2.key));
 
@@ -211,6 +208,7 @@ class TagDetailPage extends HookWidget {
             )),
       );
     });
+
     return Column(
       children: listTiles,
     );
@@ -219,6 +217,29 @@ class TagDetailPage extends HookWidget {
   // #endregion
 
   // #region LOGIC
+
+  List<MapEntry<DateTime, List<Expense>>> expensesNeedsShow() {
+    List<Expense> selectedExpense = store.expenses.fold(
+      [],
+      (prev, exp) {
+        if (needsToShow(exp)) return [...prev, exp];
+        return prev;
+      },
+    );
+
+    Map<DateTime, List<Expense>> map = selectedExpense.fold(
+      {},
+      (prev, exp) {
+        DateTime date = exp.date;
+        if (prev[date] == null) prev[date] = [];
+        prev[date].add(exp);
+        return prev;
+      },
+    );
+
+    List<MapEntry<DateTime, List<Expense>>> entries = map.entries.toList();
+    return entries;
+  }
 
   handleMultipleTagSelection(BuildContext context) async {
     await showDialog(
@@ -283,6 +304,7 @@ class TagDetailPage extends HookWidget {
                         else
                           checkboxs.value = new List.from(checkboxs.value)
                             ..remove(t);
+                        isExpensesExist.value = expensesNeedsShow().isNotEmpty;
                       });
                     },
                   );
@@ -297,6 +319,10 @@ class TagDetailPage extends HookWidget {
                       decoration: BoxDecoration(color: Colors.green[100]),
                       child: Text(
                         'Submit',
+                        style: TextStyle(
+                          fontSize: 18,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -407,7 +433,10 @@ class TagDetailPage extends HookWidget {
                     decoration: BoxDecoration(color: Colors.green[100]),
                     child: Text(
                       'Submit',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(
+                        fontSize: 18,
+                        letterSpacing: 1,
+                      ),
                     ),
                   ),
                 ),

@@ -4,41 +4,21 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:expensePlus/expenses_store.dart';
 import 'package:expensePlus/models/tag.dart';
 import 'package:expensePlus/pages/tagDetailPage.dart';
-
-
-
-
-class GraphPage extends StatefulWidget {
-  GraphPage({Key key}) : super(key: key);
-
-  @override
-  _GraphPageState createState() => _GraphPageState();
-}
+import 'package:flutter_hooks/flutter_hooks.dart';
 
 enum ViewType { Day, Week, Month }
 
-class _GraphPageState extends State<GraphPage>
-    with SingleTickerProviderStateMixin {
+class GraphPage extends HookWidget {
   CalendarController calendarController = new CalendarController();
   final store = MobxStore.st;
   TabController _controller;
 
-  @override
-  void initState() {
-    super.initState();
-    var today = DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    );
-
-    store.updateGraphSelectedDate(store.graphSelectedDate ?? today);
-
-    _controller = new TabController(length: 3, vsync: this);
-  }
+  // void initState() {}
 
   @override
   Widget build(BuildContext context) {
+    _controller = useTabController(initialLength: 3);
+
     return Scaffold(
       body: Container(
         color: const Color(0xfff9f9f9),
@@ -59,6 +39,8 @@ class _GraphPageState extends State<GraphPage>
   Widget calendar() {
     return Observer(builder: (_) {
       store.selectedDate; //for update
+      store.tags;
+      store.expenses;
       return TableCalendar(
         calendarController: calendarController,
         startingDayOfWeek: StartingDayOfWeek.monday,
@@ -183,6 +165,9 @@ class _GraphPageState extends State<GraphPage>
       store.graphSelectedDate;
       store.tags;
       store.expenses;
+
+      print('All expenses GRAPH=>${store.expenses}');
+
       return Container(
         margin: EdgeInsets.symmetric(
           vertical: 7,
@@ -280,7 +265,7 @@ class _GraphPageState extends State<GraphPage>
     double totalExpenseOfTags = store.getTotalExpenseByView(type);
 
     bool limitextended = false;
-    bool isUseLimit = store.limitMap[ViewType.Day] != null && store.isUseLimit;
+    bool isUseLimit = store.limitMap[type] != null && store.isUseLimit;
     if (isUseLimit) limitextended = totalExpenseOfTags > store.limitMap[type];
 
     Color color = limitextended ? Colors.red[700] : Colors.black;
@@ -297,7 +282,7 @@ class _GraphPageState extends State<GraphPage>
                 children: <Widget>[
                   Text(
                     'Hint: Click A Tag For More Info',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w100),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w200),
                   ),
                   Container(
                     //total expense
@@ -360,11 +345,18 @@ class _GraphPageState extends State<GraphPage>
               ),
             ),
             SizedBox(width: 8),
-            Text(
-              tag.name.toUpperCase(),
-              style: TextStyle(
-                letterSpacing: 0.75,
-                fontSize: 15,
+            SingleChildScrollView(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 150),
+                child: Text(
+                  tag.name.toUpperCase(),
+                  style: TextStyle(
+                    letterSpacing: 0.75,
+                    fontSize: 15,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
             Spacer(),
@@ -378,7 +370,7 @@ class _GraphPageState extends State<GraphPage>
                 ),
               ),
             ),
-            SizedBox(width: 80),
+            Container(constraints: BoxConstraints(maxWidth: 50)),
             Container(
               constraints: BoxConstraints(minWidth: 60),
               child: Text(

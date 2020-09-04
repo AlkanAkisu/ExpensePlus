@@ -27,7 +27,7 @@ class _TrackPageState extends State<TrackPage> {
   var focusNode = new FocusNode();
   GlobalKey<AnimatedListState> listKey;
   final store = MobxStore.st;
-  DateTime now;
+
   DateTime selectedDate;
   double calendarHeight;
   CalendarController _calendarController;
@@ -47,7 +47,7 @@ class _TrackPageState extends State<TrackPage> {
     super.initState();
     store.editing = <Expense>{};
     this.listKey = widget.listKey;
-    now = DateTime.now();
+    DateTime now = DateTime.now();
     selectedDate = DateTime(now.year, now.month, now.day);
     if (store.selectedDate == null) store.updateSelectedDate(selectedDate);
 
@@ -92,7 +92,7 @@ class _TrackPageState extends State<TrackPage> {
                     ? Text(
                         'Hint: Swipe Right To Edit, Left To Delete And Click A Tag For More Info',
                         style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w100),
+                            fontSize: 12, fontWeight: FontWeight.w200),
                       )
                     : Container(),
                 expensesListWidget(),
@@ -130,6 +130,7 @@ class _TrackPageState extends State<TrackPage> {
                 // focusNode.unfocus();;
                 selectedDate = new DateTime(day.year, day.month, day.day);
                 store.updateSelectedDate(selectedDate);
+                store.updateGraphSelectedDate(selectedDate);
                 calendarHeight = 0;
                 setState(() {});
               },
@@ -154,11 +155,13 @@ class _TrackPageState extends State<TrackPage> {
             onPressed: calendarHeight != 0
                 ? null
                 : () {
-                    store.updateSelectedDate(store.selectedDate.subtract(
+                    var newDate = store.selectedDate.subtract(
                       Duration(
                         days: 1,
                       ),
-                    ));
+                    );
+                    store.updateSelectedDate(newDate);
+                    store.updateGraphSelectedDate(newDate);
                   },
           ),
           Expanded(
@@ -219,11 +222,13 @@ class _TrackPageState extends State<TrackPage> {
             onPressed: calendarHeight != 0
                 ? null
                 : () {
-                    store.updateSelectedDate(store.selectedDate.add(
+                    var newDate = store.selectedDate.add(
                       Duration(
                         days: 1,
                       ),
-                    ));
+                    );
+                    store.updateSelectedDate(newDate);
+                    store.updateGraphSelectedDate(newDate);
                   },
           ),
         ],
@@ -303,16 +308,17 @@ class _TrackPageState extends State<TrackPage> {
     return Opacity(
       opacity: 0.5,
       child: Observer(builder: (_) {
-        if (store.thumbnailExpense == null)
-          store.setThumbnailExpense(
-            Expense(
-              tags: [Tag.otherTag],
-              name: 'other',
-              prices: [0.0],
-            ),
+        store.thumbnailExpense;
+        store.editing;
+        Expense expenseToShow = store.thumbnailExpense;
+        if (showThumbnail && store.thumbnailExpense == null)
+          expenseToShow = Expense(
+            tags: [Tag.otherTag],
+            name: 'other',
+            prices: [0.0],
           );
 
-        if (showThumbnail) {
+        if (showThumbnail || store.editing.isNotEmpty) {
           return ExpenseTile(
             expense: store.thumbnailExpense,
           );
@@ -448,6 +454,7 @@ class _TrackPageState extends State<TrackPage> {
 
   Widget editCancelButton() {
     return Observer(builder: (_) {
+      const double kSize = 40;
       return Container(
         decoration: BoxDecoration(
           color: Colors.red[400],
@@ -457,6 +464,10 @@ class _TrackPageState extends State<TrackPage> {
         width: store.editing.isNotEmpty ? null : 0,
         child: IconButton(
           onPressed: editCancelPressed,
+          constraints: BoxConstraints(
+            maxHeight: kSize,
+            maxWidth: kSize,
+          ),
           icon: Icon(
             Icons.clear,
             color: Colors.white,
@@ -508,7 +519,9 @@ class _TrackPageState extends State<TrackPage> {
     Expense expense =
         store.selectedDateExpenses.firstWhere((element) => element.id == id);
 
-    ExpenseProvider.db.delete(expense).then((value) {});
+    ExpenseProvider.db.delete(expense).then((value) {
+      print('deleted');
+    });
 
     AnimatedListRemovedItemBuilder builder = (context, anim) {
       return FadeTransition(

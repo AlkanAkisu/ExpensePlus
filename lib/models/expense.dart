@@ -21,10 +21,11 @@ class Expense {
     this.date,
   }) {
     prices = prices == null ? [0] : prices.isEmpty ? [0] : prices;
-    date ??= DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
+    date ??= DateTime.now();
+    date = DateTime(
+      date.year,
+      date.month,
+      date.day,
     );
   }
 
@@ -55,6 +56,8 @@ class Expense {
       prices.add(element);
     });
     prices = prices.isEmpty || prices == null ? [0] : prices;
+    DateTime date = json["date"] != null ? DateTime.parse(json["date"]) : null;
+    date = DateTime(date.year, date.month, date.day);
     return Expense(
       id: json["id"],
       text: json["text"],
@@ -62,7 +65,7 @@ class Expense {
       tags: tags,
       prices: prices,
       limit: json["limit"],
-      date: json["date"] != null ? DateTime.parse(json["date"]) : null,
+      date: date,
     );
   }
 

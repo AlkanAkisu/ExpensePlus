@@ -1,8 +1,8 @@
+import 'package:expensePlus/pages/introPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:expensePlus/database/expense_provider.dart';
 import 'package:expensePlus/utilities/dummy_data.dart';
-
 
 import 'package:expensePlus/database/limit_provider.dart';
 import 'package:expensePlus/database/tag_provider.dart';
@@ -37,37 +37,38 @@ class _MyAppState extends State<MyApp> {
   final navigatorKey = GlobalKey<NavigatorState>();
   bool initDone = false;
 
+  bool introDone = false;
+
   @override
   void initState() {
     super.initState();
-    init().then((value) => initDone = true);
+    init().then((_) => initDone = true);
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'Expense Plus',
+      title: 'Expense +',
       home: SafeArea(
-        child: Builder(
+        child: Observer(
           builder: (context) {
-            if (initDone) MobxStore.st.navigatorKey = navigatorKey;
-            if (initDone)
-              return Observer(builder: (_) {
-                MobxStore.st.currentIndex;
+            MobxStore.st.introDone;
+            MobxStore.st.firstTime;
+            MobxStore.st.currentIndex;
+            if (!initDone) return splashScreen();
+            MobxStore.st.navigatorKey ??= navigatorKey;
 
-                return Scaffold(
-                  appBar: appBar(context),
-                  bottomNavigationBar: SizedBox(
-                    height: 60,
-                    child: bottomNavigationBar(),
-                  ),
-                  body: allDestinations[MobxStore.st.currentIndex].widget,
-                );
-              });
+            if (MobxStore.st.firstTime && !MobxStore.st.introDone)
+              return IntroPage();
 
             return Scaffold(
-              body: splashScreen(),
+              appBar: appBar(context),
+              bottomNavigationBar: SizedBox(
+                height: 55,
+                child: bottomNavigationBar(),
+              ),
+              body: allDestinations[MobxStore.st.currentIndex].widget,
             );
           },
         ),
@@ -85,6 +86,16 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.help),
+          onPressed: () {
+            navigatorKey.currentState.push(
+              MaterialPageRoute(
+                builder: (_) => IntroPage(true),
+              ),
+            );
+          },
+        ),
         IconButton(
           icon: Icon(Icons.settings),
           onPressed: () {
@@ -105,7 +116,6 @@ class _MyAppState extends State<MyApp> {
       selectedLabelStyle: TextStyle(
         color: Colors.red,
       ),
-      selectedFontSize: 16,
       backgroundColor: Colors.grey[700],
       currentIndex: MobxStore.st.currentIndex,
       onTap: (int index) {
@@ -117,50 +127,48 @@ class _MyAppState extends State<MyApp> {
         return BottomNavigationBarItem(
           icon: Icon(
             destination.icon,
+            size: 20,
           ),
-          title: Text(
-            destination.title,
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
+          title: Text(destination.title),
         );
       }).toList(),
     );
   }
 
   Widget splashScreen() {
-    return SizedBox.expand(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.blue[500],
-          gradient: RadialGradient(
-            colors: [
-              Colors.blue[500],
-              Colors.blue[500],
-              Colors.blue[700],
-            ],
+    return Scaffold(
+      body: SizedBox.expand(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue[500],
+            gradient: RadialGradient(
+              colors: [
+                Colors.blue[500],
+                Colors.blue[500],
+                Colors.blue[700],
+              ],
+            ),
           ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Icon(
-                Icons.attach_money,
-                size: 64,
-                color: Colors.white,
-              ),
-              Text(
-                'EXPENSE PLUS',
-                style: TextStyle(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Icon(
+                  Icons.attach_money,
+                  size: 64,
                   color: Colors.white,
-                  fontSize: 48,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 3,
                 ),
-              ),
-            ],
+                Text(
+                  'EXPENSE PLUS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 3,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -168,30 +176,34 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> init() async {
-    if (initDone) return [];
+    if (initDone) return;
     // await LimitProvider.db.resetFirstTime();
-    bool firstTime = await LimitProvider.db.isFirstTime();
-    if (firstTime) {
+    final store = MobxStore.st;
+    store.firstTime = await LimitProvider.db.isFirstTime();
+    if (store.firstTime) {
       print('${DummyData.tags()} ${DummyData.expenses()}');
       for (var newTag in DummyData.tags()) await TagProvider.db.addTag(newTag);
       for (var newExpense in DummyData.expenses())
         await ExpenseProvider.db.createExpense(newExpense);
     }
-      final futures = await Future.wait([
-        TagProvider.db.getAllTags(true),
-        LimitProvider.db.getLimit(),
-        LimitProvider.db.getIsAutomatic(),
-        LimitProvider.db.getUseLimit(),
-      ]);
+    final futures = await Future.wait([
+      TagProvider.db.getAllTags(true),
+      LimitProvider.db.getLimit(),
+      LimitProvider.db.getIsAutomatic(),
+      LimitProvider.db.getUseLimit(),
+    ]);
 
-      final store = MobxStore.st;
+    if (store.limitMap.isEmpty) store.limitMap = futures[1];
 
-      if (store.limitMap.isEmpty) store.limitMap = futures[1];
+    if (store.isAutomatic == null) store.isAutomatic = futures[2];
 
-      if (store.isAutomatic == null) store.isAutomatic = futures[2];
+    if (store.isUseLimit == null) store.isUseLimit = futures[3];
 
-      if (store.isUseLimit == null) store.isUseLimit = futures[3];
-
+    store.updateGraphSelectedDate(DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    ));
 
     initDone = true;
     setState(() {});

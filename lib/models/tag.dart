@@ -11,7 +11,10 @@ class Tag {
 
   Tag({this.id, this.name, this.shorten, this.hexCode, this.color}) {
     shorten ??= name;
-    hexCode ??= 0xFFFFA726;
+    if (color == null)
+      hexCode ??= 0xFFFFA726;
+    else
+      hexCode = color.value;
     color ??= Color(hexCode);
   }
 

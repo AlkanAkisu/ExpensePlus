@@ -8,10 +8,10 @@ class Regex {
   static RegExp priceRegex =
       RegExp(r'((?<=\s|^)\d+\.*\d*(?=\s|$))', caseSensitive: false);
   static RegExp tagRegex =
-      RegExp(r'(?:(?:^|[\s]+)\.([^\.\s]+))', caseSensitive: false);
+      RegExp(r'(?:(?:^|[\s]+)[\.#]([^\.#\s]+))', caseSensitive: false);
   static RegExp limitRegex = RegExp(r'(-lim+)', caseSensitive: false);
   static RegExp dateRegex = RegExp(
-      r'(?<=#)(([0-9]+)+([a-z]+))|(?<=#)([a-z]+)|(?<=#)(\d+\.*\d*)',
+      r'(?<=!)(([0-9]+)+([a-z]+))|(?<=!)([a-z]+)|(?<=!)(\d+\.*\d*)',
       caseSensitive: false);
 
   static DateTime dateFormatter(Map<String, dynamic> map) {
@@ -128,7 +128,7 @@ class Regex {
     });
 
     str = str.replaceAll(limitRegex, '');
-    str = str.replaceAll(new RegExp(r'[\.|#]+'), '');
+    str = str.replaceAll(new RegExp(r'[\.!#]+'), '');
     str = str.trim();
 
     name = str.isEmpty || str == null ? tags.map((e) => e.name).join(' ') : str;

@@ -208,6 +208,36 @@ mixin _$MobxStore on MobxStoreBase, Store {
     });
   }
 
+  final _$firstTimeAtom = Atom(name: 'MobxStoreBase.firstTime');
+
+  @override
+  bool get firstTime {
+    _$firstTimeAtom.reportRead();
+    return super.firstTime;
+  }
+
+  @override
+  set firstTime(bool value) {
+    _$firstTimeAtom.reportWrite(value, super.firstTime, () {
+      super.firstTime = value;
+    });
+  }
+
+  final _$introDoneAtom = Atom(name: 'MobxStoreBase.introDone');
+
+  @override
+  bool get introDone {
+    _$introDoneAtom.reportRead();
+    return super.introDone;
+  }
+
+  @override
+  set introDone(bool value) {
+    _$introDoneAtom.reportWrite(value, super.introDone, () {
+      super.introDone = value;
+    });
+  }
+
   final _$deleteTagAsyncAction = AsyncAction('MobxStoreBase.deleteTag');
 
   @override
@@ -413,7 +443,9 @@ limitMap: ${limitMap},
 isAutomatic: ${isAutomatic},
 isUseLimit: ${isUseLimit},
 editing: ${editing},
-currentIndex: ${currentIndex}
+currentIndex: ${currentIndex},
+firstTime: ${firstTime},
+introDone: ${introDone}
     ''';
   }
 }
