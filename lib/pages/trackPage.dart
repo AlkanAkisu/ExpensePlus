@@ -47,8 +47,11 @@ class _TrackPageState extends State<TrackPage> {
     super.initState();
     store.editing = <Expense>{};
     this.listKey = widget.listKey;
-    DateTime now = DateTime.now();
-    selectedDate = DateTime(now.year, now.month, now.day);
+    selectedDate = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     if (store.selectedDate == null) store.updateSelectedDate(selectedDate);
 
     _calendarController = CalendarController();
@@ -189,7 +192,9 @@ class _TrackPageState extends State<TrackPage> {
                             padding: const EdgeInsets.all(4.0),
                             margin: const EdgeInsets.only(top: 4),
                             child: Text(
-                              '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
+                              store.dateStyle == 'dd/mm'
+                                  ? '${date.day.toString().padLeft(2, '0')} / ${date.month.toString().padLeft(2, '0')} / ${date.year}'
+                                  : '${date.month.toString().padLeft(2, '0')} / ${date.day.toString().padLeft(2, '0')} / ${date.year}',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.blue[700],
@@ -350,32 +355,34 @@ class _TrackPageState extends State<TrackPage> {
       FontWeight fontWeight = limitextended ? FontWeight.w700 : FontWeight.w500;
       double fontSize = limitextended ? 21 : 19;
 
-      return Container(
-        padding: const EdgeInsets.all(4.0),
-        margin: const EdgeInsets.only(bottom: 5),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: color,
-            width: 2,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        height: !showThumbnail ? 60 : 0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              isUseLimit
-                  ? 'Total / Limit : $totalPrice / ${store.limitMap[ViewType.Day]}'
-                  : 'Total Expense : $totalPrice ',
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: fontWeight,
-                letterSpacing: 1.2,
-                color: color,
-              ),
+      return GestureDetector(
+        child: Container(
+          padding: const EdgeInsets.all(4.0),
+          margin: const EdgeInsets.only(bottom: 5),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: color,
+              width: 2,
             ),
-          ],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          height: !showThumbnail ? 60 : 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                isUseLimit
+                    ? 'Total / Limit : $totalPrice / ${store.limitMap[ViewType.Day]}'
+                    : 'Total Expense : $totalPrice ',
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: fontWeight,
+                  letterSpacing: 1.2,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     });

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:expensePlus/database/expense_provider.dart';
-import 'package:expensePlus/database/limit_provider.dart';
+import 'package:expensePlus/database/settings_provider.dart';
 import 'package:expensePlus/database/tag_provider.dart';
 import 'package:expensePlus/pages/graphPage.dart';
 
@@ -16,11 +16,13 @@ enum Data {
 
 class SettingsPage extends HookWidget {
   ValueNotifier<double> amount;
+  ValueNotifier<String> dateStyle;
   final store = MobxStore.st;
 
   @override
   Widget build(BuildContext context) {
     amount = useState(null);
+    dateStyle = useState(store.dateStyle);
 
     return SafeArea(
       child: Scaffold(
@@ -193,10 +195,70 @@ class SettingsPage extends HookWidget {
                   thickness: 1,
                 ),
                 // #endregion
+
+                // #region DateStyle
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  child: Text(
+                    'Date Style',
+                    style: TextStyle(
+                      fontSize: 18,
+                      letterSpacing: 1,
+                      color: Colors.blue[700],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                ListTile(
+                  title: Text(
+                    'Set Date Style',
+                    style: TextStyle(
+                      fontSize: 18,
+                      letterSpacing: 0.3,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  onTap: () async => await configureDateStyle(context),
+                ),
+                Divider(
+                  thickness: 1,
+                ),
+
+                // #endregion
               ],
             );
           }),
         ),
+      ),
+    );
+  }
+
+  Widget deleteLimitButton(ViewType type) {
+    bool disabled = false;
+    if (type != ViewType.Month && store.isAutomatic) disabled = true;
+    if (store.limitMap[type] == null) disabled = true;
+    if (!store.isUseLimit) disabled = true;
+    const double kSize = 40;
+    return Container(
+      decoration: BoxDecoration(
+        color: !disabled ? Colors.red[400] : Colors.grey[400],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: IconButton(
+        constraints: BoxConstraints(
+          maxHeight: kSize,
+          maxWidth: kSize,
+        ),
+        onPressed: !disabled
+            ? () {
+                store.setLimit(type, null);
+              }
+            : null,
+        icon: Icon(
+          Icons.clear,
+          color: Colors.white,
+        ),
+        highlightColor: Colors.red,
       ),
     );
   }
@@ -245,7 +307,7 @@ class SettingsPage extends HookWidget {
                 Navigator.pop(context, Data.all);
               },
               child: Text(
-                'Delete All',
+                'Delete Both',
                 style: style,
               ),
             ),
@@ -292,6 +354,12 @@ class SettingsPage extends HookWidget {
       fontSize: 18,
       letterSpacing: 1,
     );
+
+    String viewtypeToString(ViewType vt) => {
+          ViewType.Day: 'Daily',
+          ViewType.Month: 'Monthly',
+          ViewType.Week: 'Weekly,'
+        }[vt];
 
     final controller = TextEditingController();
     amount.value = await showDialog(
@@ -366,40 +434,65 @@ class SettingsPage extends HookWidget {
     }
   }
 
-  String viewtypeToString(ViewType vt) => {
-        ViewType.Day: 'Daily',
-        ViewType.Month: 'Monthly',
-        ViewType.Week: 'Weekly,'
-      }[vt];
-
-  Widget deleteLimitButton(ViewType type) {
-    bool disabled = false;
-    if (type != ViewType.Month && store.isAutomatic) disabled = true;
-    if (store.limitMap[type] == null) disabled = true;
-    if (!store.isUseLimit) disabled = true;
-    const double kSize = 40;
-    return Container(
-      decoration: BoxDecoration(
-        color: !disabled ? Colors.red[400] : Colors.grey[400],
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: IconButton(
-        constraints: BoxConstraints(
-          maxHeight: kSize,
-          maxWidth: kSize,
-        ),
-        onPressed: !disabled
-            ? () {
-                store.setLimit(type, null);
-              }
-            : null,
-        icon: Icon(
-          Icons.clear,
-          color: Colors.white,
-        ),
-        highlightColor: Colors.red,
-      ),
+  Future<void> configureDateStyle(BuildContext bc) async {
+    TextStyle style = new TextStyle(
+      fontSize: 18,
+      letterSpacing: 1,
     );
+
+    dateStyle.value = await showDialog(
+      context: bc,
+      builder: (context) {
+        return SimpleDialog(
+          title: Text(
+            'Set Date Style',
+            style: TextStyle(
+              fontSize: 18,
+            ),
+          ),
+          children: <Widget>[
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, 'dd/mm');
+              },
+              child: Center(
+                child: Container(
+                  color: store.dateStyle == 'dd/mm'? Colors.blue[100]:null,
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    'dd/mm/yyyy',
+                    style: style,
+                  ),
+                ),
+              ),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context, 'mm/dd');
+              },
+              child: Center(
+                child: Container(
+                  color: store.dateStyle == 'mm/dd'? Colors.blue[100]:null,
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    'mm/dd/yyyy',
+                    style: style,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (dateStyle?.value != null) {
+      await SettingsProvider.db.changeDateStyle(dateStyle.value);
+      store.dateStyle = dateStyle.value;
+      final date = DateTime.parse(store.selectedDate.toIso8601String());
+      store.updateSelectedDate(date);
+      store.updateGraphSelectedDate(date);
+    }
   }
 
 // #endregion

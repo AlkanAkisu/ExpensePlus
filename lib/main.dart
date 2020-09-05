@@ -4,7 +4,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:expensePlus/database/expense_provider.dart';
 import 'package:expensePlus/utilities/dummy_data.dart';
 
-import 'package:expensePlus/database/limit_provider.dart';
+import 'package:expensePlus/database/settings_provider.dart';
 import 'package:expensePlus/database/tag_provider.dart';
 import 'package:expensePlus/expenses_store.dart';
 import 'package:expensePlus/pages/graphPage.dart';
@@ -179,7 +179,7 @@ class _MyAppState extends State<MyApp> {
     if (initDone) return;
     // await LimitProvider.db.resetFirstTime();
     final store = MobxStore.st;
-    store.firstTime = await LimitProvider.db.isFirstTime();
+    store.firstTime = await SettingsProvider.db.isFirstTime();
     if (store.firstTime) {
       print('${DummyData.tags()} ${DummyData.expenses()}');
       for (var newTag in DummyData.tags()) await TagProvider.db.addTag(newTag);
@@ -188,9 +188,10 @@ class _MyAppState extends State<MyApp> {
     }
     final futures = await Future.wait([
       TagProvider.db.getAllTags(true),
-      LimitProvider.db.getLimit(),
-      LimitProvider.db.getIsAutomatic(),
-      LimitProvider.db.getUseLimit(),
+      SettingsProvider.db.getLimit(),
+      SettingsProvider.db.getIsAutomatic(),
+      SettingsProvider.db.getUseLimit(),
+      SettingsProvider.db.getDateStyle(),
     ]);
 
     if (store.limitMap.isEmpty) store.limitMap = futures[1];
@@ -198,6 +199,8 @@ class _MyAppState extends State<MyApp> {
     if (store.isAutomatic == null) store.isAutomatic = futures[2];
 
     if (store.isUseLimit == null) store.isUseLimit = futures[3];
+
+    store.dateStyle = futures[4];
 
     store.updateGraphSelectedDate(DateTime(
       DateTime.now().year,

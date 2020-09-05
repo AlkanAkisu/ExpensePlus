@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobx/mobx.dart';
 import 'package:expensePlus/database/expense_provider.dart';
-import 'package:expensePlus/database/limit_provider.dart';
+import 'package:expensePlus/database/settings_provider.dart';
 import 'package:expensePlus/database/tag_provider.dart';
 import 'package:expensePlus/models/tag.dart';
 import 'package:expensePlus/models/expense.dart';
@@ -48,6 +48,8 @@ abstract class MobxStoreBase with Store {
   bool firstTime = false;
   @observable
   bool introDone = false;
+  @observable
+  String dateStyle = 'dd/mm';
 
   GlobalKey<NavigatorState> navigatorKey;
   // #endregion
@@ -382,7 +384,7 @@ abstract class MobxStoreBase with Store {
         ViewType.Month: null,
         ViewType.Week: null
       };
-    if (setDatabase) await LimitProvider.db.updateLimit(limitMap);
+    if (setDatabase) await SettingsProvider.db.updateLimit(limitMap);
   }
 
   @action
@@ -397,8 +399,8 @@ abstract class MobxStoreBase with Store {
       double.parse((monthly / 30 * 7).toStringAsFixed(2)),
     );
     if (setDatabase) {
-      await LimitProvider.db.updateLimit(limitMap);
-      LimitProvider.db.updateIsAutomatic(isAutomatic);
+      await SettingsProvider.db.updateLimit(limitMap);
+      SettingsProvider.db.updateIsAutomatic(isAutomatic);
     }
   }
 
@@ -407,7 +409,7 @@ abstract class MobxStoreBase with Store {
       {bool setDatabase = false}) async {
     isUseLimit = inputUseLimit;
     if (setDatabase) {
-      await LimitProvider.db.updateUseLimit(isUseLimit);
+      await SettingsProvider.db.updateUseLimit(isUseLimit);
     }
   }
   //#endregion

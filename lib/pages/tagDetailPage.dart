@@ -162,12 +162,6 @@ class TagDetailPage extends HookWidget {
 
     entries.sort((me1, me2) => me1.key.compareTo(me2.key));
 
-    // String debug = entries
-    //     .map((e) => '${e.value.map((e) => e.name).join(' ')} => ${e.key}')
-    //     .join(' ');
-
-    // print(debug);
-
     List<Widget> listTiles = new List();
 
     entries.forEach((entry) {
@@ -186,7 +180,9 @@ class TagDetailPage extends HookWidget {
           ),
           child: ListTile(
             title: Text(
-              '${date.day.toString().padLeft(2, '0')} / ${date.month.toString().padLeft(2, '0')} / ${date.year}',
+              store.dateStyle == 'dd/mm'
+                  ? '${date.day.toString().padLeft(2, '0')} / ${date.month.toString().padLeft(2, '0')} / ${date.year}'
+                  : '${date.month.toString().padLeft(2, '0')} / ${date.day.toString().padLeft(2, '0')} / ${date.year}',
               style: TextStyle(
                   color: calendarTileColor, fontWeight: FontWeight.w500),
             ),
@@ -368,7 +364,9 @@ class TagDetailPage extends HookWidget {
                             Border.all(color: Colors.blue[700], width: 1.5)),
                     child: Text(
                       from.value != null
-                          ? ' From: ${from.value.day.toString().padLeft(2, '0')}/${from.value.month.toString().padLeft(2, '0')}/${from.value.year}'
+                          ? store.dateStyle == 'dd/mm'
+                              ? ' From: ${from.value.day.toString().padLeft(2, '0')}/${from.value.month.toString().padLeft(2, '0')}/${from.value.year}'
+                              : ' From: ${from.value.month.toString().padLeft(2, '0')}/${from.value.day.toString().padLeft(2, '0')}/${from.value.year}'
                           : ' From: Not Selected',
                       style: TextStyle(
                           color: Colors.blue[700], fontWeight: FontWeight.w600),
@@ -397,7 +395,9 @@ class TagDetailPage extends HookWidget {
                             Border.all(color: Colors.blue[700], width: 1.5)),
                     child: Text(
                       to.value != null
-                          ? 'To: ${to.value.day.toString().padLeft(2, '0')}/${to.value.month.toString().padLeft(2, '0')}/${to.value.year}'
+                          ? store.dateStyle == 'dd/mm'
+                              ? 'To: ${to.value.day.toString().padLeft(2, '0')}/${to.value.month.toString().padLeft(2, '0')}/${to.value.year}'
+                              : 'To: ${to.value.month.toString().padLeft(2, '0')}/${to.value.day.toString().padLeft(2, '0')}/${to.value.year}'
                           : 'To: Not Selected',
                       style: TextStyle(
                           color: Colors.blue[700], fontWeight: FontWeight.w600),
@@ -423,6 +423,7 @@ class TagDetailPage extends HookWidget {
                   ),
                 ),
               ),
+
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context, checkboxs);

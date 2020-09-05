@@ -4,16 +4,16 @@ import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 import 'package:expensePlus/pages/graphPage.dart';
 
-class LimitProvider {
+class SettingsProvider {
   var needsUpdate = false;
 
   static Database _database;
-  static final LimitProvider db = LimitProvider._();
+  static final SettingsProvider db = SettingsProvider._();
 
-  LimitProvider._();
+  SettingsProvider._();
 
-  static const String LIMIT_STORE_NAME = 'limit';
-  final _limitStore = intMapStoreFactory.store(LIMIT_STORE_NAME);
+  static const String SETTINGS_STORE_NAME = 'settings';
+  final _settingsStore = intMapStoreFactory.store(SETTINGS_STORE_NAME);
 
   Future<Database> get database async {
     if (_database != null) return _database;
@@ -32,7 +32,7 @@ class LimitProvider {
 
   /// Insert limit on database and returns as int
   Future<void> updateLimit(Map<ViewType, double> limitMap) async {
-    await _limitStore.record(0).put(
+    await _settingsStore.record(0).put(
       await database,
       {
         'day': limitMap[ViewType.Day],
@@ -44,7 +44,7 @@ class LimitProvider {
 
   /// Insert limit on database and returns as int
   Future<Map<ViewType, double>> getLimit() async {
-    final val = await _limitStore.record(0).get(
+    final val = await _settingsStore.record(0).get(
           await database,
         );
 
@@ -69,7 +69,7 @@ class LimitProvider {
   }
 
   Future<void> updateIsAutomatic(bool isAutomatic) async {
-    await _limitStore.record(1).put(
+    await _settingsStore.record(1).put(
       await database,
       {
         'isAutomatic': isAutomatic,
@@ -78,7 +78,7 @@ class LimitProvider {
   }
 
   Future<bool> getIsAutomatic() async {
-    final val = await _limitStore.record(1).get(
+    final val = await _settingsStore.record(1).get(
           await database,
         );
     if (val == null) {
@@ -90,7 +90,7 @@ class LimitProvider {
 
   //USE LIMIT
   Future<void> updateUseLimit(bool useLimit) async {
-    await _limitStore.record(2).put(
+    await _settingsStore.record(2).put(
       await database,
       {
         'useLimit': useLimit,
@@ -99,7 +99,7 @@ class LimitProvider {
   }
 
   Future<bool> getUseLimit() async {
-    final val = await _limitStore.record(2).get(
+    final val = await _settingsStore.record(2).get(
           await database,
         );
 
@@ -111,12 +111,12 @@ class LimitProvider {
   }
 
   Future<bool> isFirstTime() async {
-    final val = await _limitStore.record(3).get(
+    final val = await _settingsStore.record(3).get(
           await database,
         );
 
     if (val == null) {
-      await _limitStore.record(3).put(
+      await _settingsStore.record(3).put(
         await database,
         {
           'firstTime': false,
@@ -128,8 +128,34 @@ class LimitProvider {
   }
 
   Future<void> resetFirstTime() async {
-    await _limitStore.record(3).delete(
+    await _settingsStore.record(3).delete(
           await database,
         );
+  }
+
+  Future<String> getDateStyle() async {
+    final val = await _settingsStore.record(4).get(
+          await database,
+        );
+
+    if (val == null) {
+      await _settingsStore.record(4).put(
+        await database,
+        {
+          'dateStyle': 'dd/mm',
+        },
+      );
+      return 'dd/mm';
+    }
+    return val['dateStyle'];
+  }
+
+  Future<void> changeDateStyle(String style) async {
+    await _settingsStore.record(4).update(
+      await database,
+      {
+        'dateStyle': '$style',
+      },
+    );
   }
 }

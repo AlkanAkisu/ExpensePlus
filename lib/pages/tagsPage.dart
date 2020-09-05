@@ -31,13 +31,14 @@ class TagsPage extends HookWidget {
     conflict = useState(null);
     confirmButtonName = useState('Add');
 
-    useEffect(
-        () => () {
-              store.editTag = null;
-              nameController.text = '';
-              shortenController.text = '';
-            },
-        []);
+  
+
+    useEffect(() {
+      store.editTag = null;
+      nameController.text = '';
+      shortenController.text = '';
+      return () {};
+    }, []);
 
     return Scaffold(
       body: SafeArea(

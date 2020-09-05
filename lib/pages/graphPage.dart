@@ -45,7 +45,12 @@ class GraphPage extends HookWidget {
         calendarController: calendarController,
         startingDayOfWeek: StartingDayOfWeek.monday,
         rowHeight: 55,
-        initialSelectedDay: store.graphSelectedDate ?? DateTime.now(),
+        initialSelectedDay: store.graphSelectedDate ??
+            DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+            ),
         availableGestures: AvailableGestures.horizontalSwipe,
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
@@ -53,6 +58,7 @@ class GraphPage extends HookWidget {
         onDaySelected: (day, events) {
           store.updateGraphSelectedDate(day);
           store.updateSelectedDate(day);
+          _controller.animateTo(0);
         },
         builders: CalendarBuilders(
           selectedDayBuilder: (context, date, events) {
