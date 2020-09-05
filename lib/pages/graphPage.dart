@@ -274,7 +274,21 @@ class GraphPage extends HookWidget {
 
     return SingleChildScrollView(
       child: entries.isEmpty
-          ? Container()
+          ? Container(
+              height: 100,
+              child: Center(
+                child: Text(
+                  'No Expense Found',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            )
           : Container(
               height: 400,
               child: Column(
