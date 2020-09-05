@@ -35,7 +35,7 @@ class IntroPage extends HookWidget {
         .map((str) => Container(
               child: Image(
                 image: AssetImage('assets/$str PAGE.png'),
-                fit: BoxFit.cover,
+                fit: BoxFit.scaleDown,
               ),
             ))
         .toList();
@@ -43,7 +43,7 @@ class IntroPage extends HookWidget {
 
   Widget introPage(BuildContext context) {
     return SafeArea(
-          child: Scaffold(
+      child: Scaffold(
         body: Stack(
           children: <Widget>[
             Positioned.fill(
@@ -70,7 +70,7 @@ class IntroPage extends HookWidget {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 40,
+              bottom: 10,
               child: Column(
                 children: <Widget>[
                   Row(
@@ -95,7 +95,7 @@ class IntroPage extends HookWidget {
             padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.grey[400],
+              color: Colors.grey[400].withOpacity(0.4),
             ),
             child: Icon(icon),
           ),
@@ -108,7 +108,7 @@ class IntroPage extends HookWidget {
 
       if (_current.value == imagesList().length - 1) //Last page
         buttons[1] = button(
-          Icons.check_circle_outline,
+          Icons.check,
           () {
             _resetState.value = !_resetState.value;
             if (!isHelpButton) {
@@ -117,8 +117,9 @@ class IntroPage extends HookWidget {
                 Duration(milliseconds: 100),
                 () => MobxStore.st.introDone = true,
               );
-            } else
+            } else {
               Navigator.pop(context, '');
+            }
           },
         );
     }
