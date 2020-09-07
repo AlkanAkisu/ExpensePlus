@@ -52,6 +52,9 @@ abstract class MobxStoreBase with Store {
   String dateStyle = 'dd/mm';
 
   GlobalKey<NavigatorState> navigatorKey;
+
+  @observable
+  Image icon;
   // #endregion
 
   //

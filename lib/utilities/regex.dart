@@ -8,10 +8,10 @@ class Regex {
   static RegExp priceRegex =
       RegExp(r'((?<=\s|^)\d+\.*\d*(?=\s|$))', caseSensitive: false);
   static RegExp tagRegex =
-      RegExp(r'(?:(?:^|[\s]+)[\.#]([^\.#\s]+))', caseSensitive: false);
+      RegExp(r'(?:[\.#]([^\.#\s]+))', caseSensitive: false);
   static RegExp limitRegex = RegExp(r'(-lim+)', caseSensitive: false);
   static RegExp dateRegex = RegExp(
-      r'(?<=!)(([0-9]+)+([a-z]+))|(?<=!)([a-z]+)|(?<=!)(\d+\.*\d*)',
+      r'[!](([0-9]+)+([a-z]+))|[!]([a-z]+)|[!](\d+\.*\d*)',
       caseSensitive: false);
 
   static DateTime dateFormatter(Map<String, dynamic> map) {
@@ -32,12 +32,14 @@ class Regex {
         return now.subtract(Duration(days: 1));
       case 'lastweek':
         return now.subtract(Duration(days: 7));
+      case 'weeks':
       case 'week':
       case 'w':
-        return now.subtract(Duration(days: 7 * howMany));
+        return now.add(Duration(days: 7 * howMany));
+      case 'days':
       case 'day':
       case 'd':
-        return now.subtract(Duration(days: 1 * howMany));
+        return now.add(Duration(days: 1 * howMany));
     }
     return null;
   }
@@ -77,7 +79,6 @@ class Regex {
         month ??= DateTime.now().month;
         int day = int.parse(map[0]);
 
-
         date = new DateTime(
           DateTime.now().year,
           month,
@@ -86,7 +87,6 @@ class Regex {
 
         //todo wrong date entered handle it
         if (date.month != month || date.day != day) {
-
           date = selectedDate;
         }
       } else {
@@ -105,8 +105,6 @@ class Regex {
 
     //TAG
     if (tagRegex.allMatches(str).isEmpty) tags = [Tag.other()];
-
-
 
     for (final el in tagRegex.allMatches(str)) {
       String name = el[1];
@@ -131,10 +129,13 @@ class Regex {
     str = str.replaceAll(new RegExp(r'[\.!#]+'), '');
     str = str.trim();
 
-    name = str.isEmpty || str == null ? tags.map((e) => e.name).join(' ') : str;
     prices = prices.isEmpty ? [0] : prices;
 
     limit ??= true;
+
+    tags = tags.toSet().toList();
+    
+    name = str.isEmpty || str == null ? tags.map((e) => e.name).join(' ') : str;
 
     Expense rv = new Expense(
       name: name,

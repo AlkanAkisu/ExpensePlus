@@ -31,7 +31,7 @@ class TagsPage extends HookWidget {
     conflict = useState(null);
     confirmButtonName = useState('Add');
 
-  
+
 
     useEffect(() {
       store.editTag = null;
@@ -446,12 +446,13 @@ class TagsPage extends HookWidget {
           content: SingleChildScrollView(
             child: MaterialPicker(
               pickerColor: currentColor.value,
+
               onColorChanged: (color) {
                 currentColor.value = color;
                 Navigator.pop(context);
                 FocusScope.of(context).unfocus();
               },
-              enableLabel: true,
+              enableLabel: false,
             ),
           ),
         );

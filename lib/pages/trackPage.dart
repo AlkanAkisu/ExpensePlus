@@ -1,7 +1,9 @@
 import 'dart:ui';
 
+import 'package:expensePlus/utilities/richText.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -14,18 +16,12 @@ import 'package:expensePlus/widgets/expenseTile.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:expensePlus/models/tag.dart';
 
-class TrackPage extends StatefulWidget {
-  @override
-  _TrackPageState createState() => _TrackPageState();
-  final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
-}
-
-class _TrackPageState extends State<TrackPage> {
+class TrackPage extends HookWidget {
   Map<int, double> opacity = new Map();
-  TextEditingController controller;
+  RichTextController _controller;
 
   var focusNode = new FocusNode();
-  GlobalKey<AnimatedListState> listKey;
+  GlobalKey<AnimatedListState> listKey = GlobalKey();
   final store = MobxStore.st;
 
   DateTime selectedDate;
@@ -36,17 +32,21 @@ class _TrackPageState extends State<TrackPage> {
   Expense thumbnailExpense;
   bool showThumbnail = false, isKeyboardActive = false;
 
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
+  ValueNotifier<bool> setState;
 
-  @override
   void initState() {
-    super.initState();
+    _controller = RichTextController({
+      Regex.tagRegex: TextStyle(
+        color: Colors.orange[700],
+      ),
+      Regex.priceRegex: TextStyle(
+        color: Colors.blue[700],
+      ),
+      Regex.dateRegex: TextStyle(
+        color: Colors.green[700],
+      ),
+    });
     store.editing = <Expense>{};
-    this.listKey = widget.listKey;
     selectedDate = DateTime(
       DateTime.now().year,
       DateTime.now().month,
@@ -60,27 +60,36 @@ class _TrackPageState extends State<TrackPage> {
     KeyboardVisibility.onChange.listen((bool visible) {
       isKeyboardActive = visible;
 
-      if (this.mounted && isKeyboardActive && calendarHeight > 0)
-        setState(() {
-          calendarHeight = 0;
-        });
-      if (this.mounted && !isKeyboardActive && store.editing.isNotEmpty)
-        setState(() {
-          store.editing = {};
-          controller.text = '';
-        });
-      if (this.mounted && !isKeyboardActive && showThumbnail)
-        setState(() {
-          //TODO text memory do controller.text = oldtext when click back
-          showThumbnail = false;
-          store.thumbnailExpense = null;
-          FocusScope.of(focusNode.context).unfocus();
-        });
+      //keybard opening when calendar is enable
+      if (isKeyboardActive && calendarHeight > 0) {
+        calendarHeight = 0;
+        setState.value = !setState.value;
+      }
+      //delete
+      if (!isKeyboardActive && store.editing.isNotEmpty) {
+        store.editing = {};
+        _controller.text = '';
+        setState.value = !setState.value;
+      }
+
+      if (!isKeyboardActive && showThumbnail) {
+        showThumbnail = false;
+        store.thumbnailExpense = null;
+        FocusScope.of(focusNode.context).unfocus();
+        setState.value = !setState.value;
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    setState = useState(false);
+    useEffect(() {
+      initState();
+      return () {};
+    }, []);
+
+
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -135,7 +144,7 @@ class _TrackPageState extends State<TrackPage> {
                 store.updateSelectedDate(selectedDate);
                 store.updateGraphSelectedDate(selectedDate);
                 calendarHeight = 0;
-                setState(() {});
+                setState.value = !setState.value;
               },
             );
           },
@@ -392,7 +401,7 @@ class _TrackPageState extends State<TrackPage> {
   //---------------ADD PRICE TEXT FIELD---------------
 
   Widget addPriceWidget() {
-    controller = TextEditingController();
+
 
     return Container(
       padding: const EdgeInsets.all(4.0),
@@ -422,23 +431,23 @@ class _TrackPageState extends State<TrackPage> {
               onTap: () {
                 if (store.editing.isNotEmpty) return;
 
-                if (calendarHeight == null)
-                  setState(() {
-                    calendarHeight = 0;
-                  });
+                if (calendarHeight == null) {
+                  calendarHeight = 0;
+                  setState.value = !setState.value;
+                }
 
                 if (!showThumbnail) {
                   showThumbnail = true;
 
-                  setState(() {});
+                  setState.value = !setState.value;
                 }
               },
               focusNode: focusNode,
               textInputAction: TextInputAction.send,
-              controller: controller,
+              controller: _controller,
               maxLines: null,
               minLines: null,
-              onSubmitted: (value) => textFieldSubmitted(controller),
+              onSubmitted: (value) => textFieldSubmitted(_controller),
               textAlignVertical: TextAlignVertical.center,
               style: TextStyle(
                 fontSize: 20,
@@ -489,9 +498,9 @@ class _TrackPageState extends State<TrackPage> {
 
   // #region Logic
 
-  textFieldSubmitted(TextEditingController controller) async {
+  textFieldSubmitted(TextEditingController _controller) async {
     Expense regexExpense = await Regex.doRegex(
-      controller.text,
+      _controller.text,
       store.selectedDate,
       true,
     );
@@ -499,7 +508,7 @@ class _TrackPageState extends State<TrackPage> {
     showThumbnail = false;
     store.thumbnailExpense = null;
 
-    controller.text = '';
+    _controller.text = '';
 
     if (store.editing.isNotEmpty) {
       //EDITING PART
@@ -519,7 +528,7 @@ class _TrackPageState extends State<TrackPage> {
     }
     showThumbnail = false;
 
-    setState(() {});
+    setState.value = !setState.value;
   }
 
   deleteButtonPressed(int id) {
@@ -545,7 +554,7 @@ class _TrackPageState extends State<TrackPage> {
       duration: Duration(milliseconds: 500),
     );
     store.deleteExpense(expense);
-    setState(() {});
+    setState.value = !setState.value;
   }
 
   editButtonPressed(int id) {
@@ -559,7 +568,13 @@ class _TrackPageState extends State<TrackPage> {
     //to set state of total expense widget
     store.selectedDate = DateTime.parse(store.selectedDate.toIso8601String());
 
-    controller.text = expense.text;
+    _controller.text = expense.text;
+
+    _controller.buildTextSpan(
+      style: TextStyle(
+        color: Colors.red,
+      ),
+    );
 
     showThumbnail = true;
 
@@ -579,7 +594,7 @@ class _TrackPageState extends State<TrackPage> {
       calendarHeight = null;
     else
       calendarHeight = 0;
-    setState(() {});
+    setState.value = !setState.value;
   }
 
   bool isSelectedDate(Expense exp) {
@@ -591,7 +606,7 @@ class _TrackPageState extends State<TrackPage> {
   editCancelPressed() {
     store.editing = {};
     focusNode.unfocus();
-    controller.text = '';
+    _controller.text = '';
   }
 // #endregion
 

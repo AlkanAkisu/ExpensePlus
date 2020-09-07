@@ -12,12 +12,22 @@ import 'package:expensePlus/pages/settingsPage.dart';
 import 'package:expensePlus/pages/tagsPage.dart';
 import 'package:expensePlus/pages/trackPage.dart';
 
-void main() {
+import 'package:time/time.dart';
+
+void main() async {
+  MobxStore.st.icon = Image(
+    image: AssetImage('assets/icon/icon.png'),
+    fit: BoxFit.cover,
+    loadingBuilder: (context, child, loadingProgress) {
+      print('loadingProgress ==> $loadingProgress');
+      return Container();
+    },
+  );
   runApp(MyApp());
 }
 
-class Destination {
-  const Destination(this.title, this.icon, this.widget);
+class BottomItems {
+  const BottomItems(this.title, this.icon, this.widget);
   final String title;
   final IconData icon;
   final Widget widget;
@@ -29,20 +39,25 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final List<Destination> allDestinations = <Destination>[
-    Destination('Graph', Icons.trending_up, GraphPage()),
-    Destination('Add Expense', Icons.attach_money, TrackPage()),
-    Destination('Tags', Icons.bookmark_border, TagsPage()),
+  final List<BottomItems> allDestinations = <BottomItems>[
+    BottomItems('Graph', Icons.trending_up, GraphPage()),
+    BottomItems('Add Expense', Icons.attach_money, TrackPage()),
+    BottomItems('Tags', Icons.bookmark_border, TagsPage()),
   ];
   final navigatorKey = GlobalKey<NavigatorState>();
   bool initDone = false;
+  bool delayDone = false;
 
   bool introDone = false;
+
+  TextEditingController controller = new TextEditingController();
+  var focusNode = new FocusNode();
 
   @override
   void initState() {
     super.initState();
-    init().then((_) => initDone = true);
+    Future.delayed(200.milliseconds).then((value) => delayDone = true);
+    init().then((value) => initDone = true);
   }
 
   @override
@@ -56,7 +71,8 @@ class _MyAppState extends State<MyApp> {
             MobxStore.st.introDone;
             MobxStore.st.firstTime;
             MobxStore.st.currentIndex;
-            if (!initDone) return splashScreen();
+            // return splashScreen();
+            if (!initDone || !delayDone) return splashScreen();
             MobxStore.st.navigatorKey ??= navigatorKey;
 
             if (MobxStore.st.firstTime && !MobxStore.st.introDone)
@@ -123,7 +139,7 @@ class _MyAppState extends State<MyApp> {
           MobxStore.st.currentIndex = index;
         });
       },
-      items: allDestinations.map((Destination destination) {
+      items: allDestinations.map((BottomItems destination) {
         return BottomNavigationBarItem(
           icon: Icon(
             destination.icon,
@@ -140,33 +156,26 @@ class _MyAppState extends State<MyApp> {
       body: SizedBox.expand(
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.blue[500],
-            gradient: RadialGradient(
-              colors: [
-                Colors.blue[500],
-                Colors.blue[500],
-                Colors.blue[700],
-              ],
-            ),
+            color: Color(0xff1266D3),
           ),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Icon(
-                  Icons.attach_money,
-                  size: 64,
-                  color: Colors.white,
+                Spacer(flex: 273),
+                Image(
+                  image: AssetImage('assets/splashScreen/splashTextIcon.png'),
+                  loadingBuilder:
+                      (_, Widget child, ImageChunkEvent loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: Container(
+                        color: Colors.black,
+                      ),
+                    );
+                  },
                 ),
-                Text(
-                  'EXPENSE PLUS',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 48,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 3,
-                  ),
-                ),
+                Spacer(flex: 715),
               ],
             ),
           ),
