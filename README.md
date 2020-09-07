@@ -20,13 +20,13 @@ Most of the expense trackers wants you to click and type a lot of things. Howeve
 
 Expense Plus has 4 main feature:
 
-1. Add Expense
+1. Add Expense<br/>
    You can add and see your expenses in here
 2. Tags<br/>
    You can add and see your tags in here. Also you can give short name to a tag so you do not need to type the whole name
-3. Graph
+3. Graph<br/>
    You can see your expense amounts daily, weekly and monthly based on the tags
-4. Limit
+4. Limit<br/>
    You can configure daily, weekly and monthly limits and get feedback if you exceed the limit
 
 ## :question: How To Use
