@@ -15,14 +15,6 @@ import 'package:expensePlus/pages/trackPage.dart';
 import 'package:time/time.dart';
 
 void main() async {
-  MobxStore.st.icon = Image(
-    image: AssetImage('assets/icon/icon.png'),
-    fit: BoxFit.cover,
-    loadingBuilder: (context, child, loadingProgress) {
-      print('loadingProgress ==> $loadingProgress');
-      return Container();
-    },
-  );
   runApp(MyApp());
 }
 
@@ -56,8 +48,16 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(200.milliseconds).then((value) => delayDone = true);
-    init().then((value) => initDone = true);
+    Future.delayed(800.milliseconds).then((value) {
+      setState(() {
+        delayDone = true;
+      });
+    });
+    init().then((value) {
+      setState(() {
+        initDone = true;
+      });
+    });
   }
 
   @override
