@@ -2,6 +2,16 @@
 
 ### An expense tracker that helps you to create expenses in a single textfield with the help of Regular Expressions 🎉
 
+<div style='display:flex; justify-content: space-between;'>
+<img width=150 src='screenshots/Page 1.png'>
+<img width=150 src='screenshots/Page 2.png'>
+<img width=150 src='screenshots/Page 3.png'>
+<img width=150 src='screenshots/Page 4.png'>
+<img width=150 src='screenshots/Page 5.png'>
+</div>
+
+<br/><br/>
+
 ## 📋 Table of Contents
 
 ➡️ [Vision](#eyes-vision)
