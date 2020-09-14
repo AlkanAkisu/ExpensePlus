@@ -1,14 +1,13 @@
 import 'package:expensePlus/expenses_store.dart';
 import 'package:expensePlus/models/tag.dart';
 import 'package:expensePlus/models/expense.dart';
-import 'package:expensePlus/database/tag_provider.dart';
 
 class Regex {
   //REGEX
   static RegExp priceRegex =
       RegExp(r'((?<=\s|^)\d+\.*\d*(?=\s|$))', caseSensitive: false);
   static RegExp tagRegex =
-      RegExp(r'(?:[\.#]([^\.#\s]+))', caseSensitive: false);
+      RegExp(r'(?<=^|\s)[\.#]([^\.#\s]+)', caseSensitive: false);
   static RegExp limitRegex = RegExp(r'(-lim+)', caseSensitive: false);
   static RegExp dateRegex = RegExp(
       r'[!](([0-9]+)+([a-z]+))|[!]([a-z]+)|[!](\d+\.*\d*)',
@@ -63,7 +62,12 @@ class Regex {
 
     priceRegex.allMatches(str).forEach(
       (el) {
-        prices.add(double.parse(double.parse(el[1]).toStringAsFixed(2)));
+        double price = double.parse(double.parse(el[1]).toStringAsFixed(2));
+        final upperLimit = 99999;
+        if (price > upperLimit) {
+          while (price > upperLimit) price = (price / 10).floor().toDouble();
+        }
+        prices.add(price);
       },
     );
     str = str.replaceAll(priceRegex, '');
@@ -134,8 +138,10 @@ class Regex {
     limit ??= true;
 
     tags = tags.toSet().toList();
-    
+
     name = str.isEmpty || str == null ? tags.map((e) => e.name).join(' ') : str;
+
+    if (tags.length > 5) tags = tags.sublist(0, 5);
 
     Expense rv = new Expense(
       name: name,

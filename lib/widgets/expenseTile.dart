@@ -35,19 +35,19 @@ class _ExpenseTileState extends State<ExpenseTile> {
           ]),
       child: Row(
         children: <Widget>[
-          Container(
-            width: 5,
-            height: 92,
-            child: Column(
-              children: widget.expense.tags
-                  .map(
-                    (tag) => Expanded(
-                      child: Container(color: tag.color),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
+          // Container(
+          //   width: 5,
+          //   height: 92,
+          //   child: Column(
+          //     children: widget.expense.tags
+          //         .map(
+          //           (tag) => Expanded(
+          //             child: Container(color: tag.color),
+          //           ),
+          //         )
+          //         .toList(),
+          //   ),
+          // ),
           Expanded(
             child: expenseTile(
               widget.expense,
@@ -127,6 +127,9 @@ class _ExpenseTileState extends State<ExpenseTile> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
                 margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 3),
+                constraints: BoxConstraints(
+                  maxWidth: 150,
+                ),
                 decoration: BoxDecoration(
                     color: Colors.white,
                     boxShadow: [
@@ -143,6 +146,7 @@ class _ExpenseTileState extends State<ExpenseTile> {
                     )),
                 child: Text(
                   tag.name,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,

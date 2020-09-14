@@ -39,7 +39,7 @@ class ExpenseProvider {
       newExpense.toJson(),
     );
     newExpense.id = key;
-    update(newExpense);
+    await update(newExpense);
     print('DATABASE:\texpense added ${newExpense.name}');
     return key;
   }

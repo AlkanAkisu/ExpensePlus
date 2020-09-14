@@ -211,6 +211,8 @@ abstract class MobxStoreBase with Store {
 
   @action
   void deleteAllTags() {
+    final tagsToDelete = List.from(tags);
+    tagsToDelete.forEach((tag) => deleteTag(tag));
     tags = [];
   }
 
@@ -393,17 +395,28 @@ abstract class MobxStoreBase with Store {
   @action
   Future<void> automaticSet({bool setDatabase = false}) async {
     final monthly = limitMap[ViewType.Month];
-    setLimit(
-      ViewType.Day,
-      double.parse((monthly / 30).toStringAsFixed(2)),
-    );
-    setLimit(
-      ViewType.Week,
-      double.parse((monthly / 30 * 7).toStringAsFixed(2)),
-    );
+    if (monthly != null) {
+      setLimit(
+        ViewType.Day,
+        double.parse((monthly / 30).toStringAsFixed(2)),
+      );
+      setLimit(
+        ViewType.Week,
+        double.parse((monthly / 30 * 7).toStringAsFixed(2)),
+      );
+    } else {
+      setLimit(
+        ViewType.Day,
+        null,
+      );
+      setLimit(
+        ViewType.Week,
+        null,
+      );
+    }
     if (setDatabase) {
       await SettingsProvider.db.updateLimit(limitMap);
-      SettingsProvider.db.updateIsAutomatic(isAutomatic);
+      await SettingsProvider.db.updateIsAutomatic(isAutomatic);
     }
   }
 

@@ -23,6 +23,7 @@ class IntroPage extends HookWidget {
 
   List<Widget> imagesList() {
     List<String> list = [
+      'ZERO',
       'FIRST',
       'SECOND',
       'THIRD',
@@ -35,7 +36,7 @@ class IntroPage extends HookWidget {
         .map((str) => Container(
               child: Image(
                 image: AssetImage('assets/$str PAGE.png'),
-                fit: BoxFit.scaleDown,
+                fit: BoxFit.fitHeight,
               ),
             ))
         .toList();
@@ -61,7 +62,7 @@ class IntroPage extends HookWidget {
                     onPageChanged: (index, reason) {
                       _current.value = index;
                     }),
-                itemCount: 6,
+                itemCount: imagesList().length,
                 itemBuilder: (BuildContext context, int itemIndex) {
                   return imagesList()[itemIndex];
                 },
@@ -77,8 +78,7 @@ class IntroPage extends HookWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: carouselButtons(context),
                   ),
-
-                  //navigationDots()
+                  navigationDots()
                 ],
               ),
             ),
@@ -127,12 +127,11 @@ class IntroPage extends HookWidget {
   }
 
   Widget navigationDots() {
+    int index = -1;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children:
-          List.generate(imagesList().length, (index) => index).map((number) {
-        int index = List.generate(imagesList().length, (index) => index)
-            .indexOf(number);
+      children: imagesList().map((number) {
+        index++;
         return Container(
           width: 8.0,
           height: 8.0,
@@ -140,8 +139,8 @@ class IntroPage extends HookWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _current.value == index
-                ? Color.fromRGBO(255, 255, 255, 0.9)
-                : Color.fromRGBO(255, 255, 255, 0.4),
+                ? Colors.white
+                : Colors.black.withOpacity(0.5),
           ),
         );
       }).toList(),

@@ -332,6 +332,17 @@ class TagDetailPage extends HookWidget {
   }
 
   handleDateSelection(BuildContext context) async {
+    VoidCallback checkFromTo = () {
+      if (to.value != null && from.value != null) {
+        if (from.value.isAfter(to.value)) {
+          //from must before to
+          final oldEarlyValue = to.value;
+          to.value = from.value;
+          from.value = oldEarlyValue;
+        }
+      }
+    };
+
     await showDialog(
       context: context,
       builder: (context) {
@@ -354,6 +365,7 @@ class TagDetailPage extends HookWidget {
                     firstDate: DateTime(2010),
                     lastDate: DateTime(2030),
                   );
+                  checkFromTo();
                   setState(() {});
                 },
                 child: Center(
@@ -385,6 +397,7 @@ class TagDetailPage extends HookWidget {
                     firstDate: DateTime(2010),
                     lastDate: DateTime(2030),
                   );
+                  checkFromTo();
                   setState(() {});
                 },
                 child: Center(

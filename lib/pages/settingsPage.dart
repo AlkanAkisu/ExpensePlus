@@ -23,7 +23,7 @@ class SettingsPage extends HookWidget {
   Widget build(BuildContext context) {
     amount = useState(null);
     dateStyle = useState(store.dateStyle);
-
+    
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -43,9 +43,7 @@ class SettingsPage extends HookWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 // #region LIMIT
-                SizedBox(
-                  height: 20,
-                ),
+
                 Container(
                   padding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                   child: Text(

@@ -186,14 +186,17 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> init() async {
     if (initDone) return;
-    // await LimitProvider.db.resetFirstTime();
+    // await SettingsProvider.db.resetFirstTime();
     final store = MobxStore.st;
     store.firstTime = await SettingsProvider.db.isFirstTime();
     if (store.firstTime) {
       print('${DummyData.tags()} ${DummyData.expenses()}');
-      for (var newTag in DummyData.tags()) await TagProvider.db.addTag(newTag);
-      for (var newExpense in DummyData.expenses())
+      for (var newTag in DummyData.tags()) {
+        await TagProvider.db.addTag(newTag);
+      }
+      for (var newExpense in DummyData.expenses()) {
         await ExpenseProvider.db.createExpense(newExpense);
+      }
     }
     final futures = await Future.wait([
       TagProvider.db.getAllTags(true),

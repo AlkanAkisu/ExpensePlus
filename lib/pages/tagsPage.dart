@@ -31,8 +31,6 @@ class TagsPage extends HookWidget {
     conflict = useState(null);
     confirmButtonName = useState('Add');
 
-
-
     useEffect(() {
       store.editTag = null;
       nameController.text = '';
@@ -129,16 +127,21 @@ class TagsPage extends HookWidget {
                     ),
                   ],
                 ),
-                Container(
-                  width: double.infinity,
-                  height: store.tags.isNotEmpty ? null : 0,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                  ),
-                  child: Text(
-                    'Hint: Swipe Right To Edit, Left To Delete And Click A Tag for more info',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w200),
-                  ),
+                Observer(
+                  builder: (_) {
+                    return Container(
+                      width: double.infinity,
+                      height: store.tags.isNotEmpty ? null : 0,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                      ),
+                      child: Text(
+                        'Hint: Swipe Right To Edit, Left To Delete And Click A Tag for more info',
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w200),
+                      ),
+                    );
+                  },
                 ),
                 tagList(),
               ],
@@ -170,7 +173,8 @@ class TagsPage extends HookWidget {
                         textInputAction: TextInputAction.send,
                         controller: nameController,
                         decoration: InputDecoration(
-                            hintText: 'Tag Name (e.g. travel)',
+                            hintText: '(e.g. travel)',
+                            labelText: 'Tag Name',
                             floatingLabelBehavior: FloatingLabelBehavior.auto),
                         onChanged: (str) {
                           buttonName.value = str;
@@ -188,7 +192,8 @@ class TagsPage extends HookWidget {
                         focusNode: focusNode,
                         controller: shortenController,
                         decoration: InputDecoration(
-                          hintText: 'Short Name (e.g. t)',
+                          labelText: 'Short Name',
+                          hintText: '(e.g. t)',
                           floatingLabelBehavior: FloatingLabelBehavior.auto,
                         ),
                         onChanged: (str) {
@@ -276,6 +281,9 @@ class TagsPage extends HookWidget {
                               vertical: 5, horizontal: 6),
                           margin: const EdgeInsets.symmetric(
                               vertical: 2, horizontal: 3),
+                          constraints: BoxConstraints(
+                            maxWidth: 150,
+                          ),
                           decoration: BoxDecoration(
                               color: Colors.white,
                               boxShadow: [
@@ -292,6 +300,7 @@ class TagsPage extends HookWidget {
                               )),
                           child: Text(
                             buttonName.value,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -315,7 +324,7 @@ class TagsPage extends HookWidget {
       return SingleChildScrollView(
         child: Container(
           width: double.infinity,
-          constraints: BoxConstraints(minHeight: 250),
+          constraints: BoxConstraints(minHeight: 300),
           padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: Colors.grey[200],
@@ -446,7 +455,6 @@ class TagsPage extends HookWidget {
           content: SingleChildScrollView(
             child: MaterialPicker(
               pickerColor: currentColor.value,
-
               onColorChanged: (color) {
                 currentColor.value = color;
                 Navigator.pop(context);

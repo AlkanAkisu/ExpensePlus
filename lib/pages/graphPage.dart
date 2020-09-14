@@ -65,6 +65,10 @@ class GraphPage extends HookWidget {
             return calendarTile(context, date, events,
                 textColor: Colors.white, backgroundColor: Colors.blue[200]);
           },
+          todayDayBuilder: (context, date, events) {
+            return calendarTile(context, date, events,
+                textColor: Colors.black, backgroundColor: Colors.blue[50]);
+          },
           weekendDayBuilder: (context, date, events) {
             return calendarTile(
               context,

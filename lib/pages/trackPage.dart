@@ -40,7 +40,7 @@ class TrackPage extends HookWidget {
         color: Colors.orange[700],
       ),
       Regex.priceRegex: TextStyle(
-        color: Colors.blue[700],
+        color: Colors.deepPurple[700],
       ),
       Regex.dateRegex: TextStyle(
         color: Colors.green[700],
@@ -75,6 +75,7 @@ class TrackPage extends HookWidget {
       if (!isKeyboardActive && showThumbnail) {
         showThumbnail = false;
         store.thumbnailExpense = null;
+        _controller.text = '';
         FocusScope.of(focusNode.context).unfocus();
         setState.value = !setState.value;
       }
@@ -419,6 +420,7 @@ class TrackPage extends HookWidget {
         children: <Widget>[
           Expanded(
             child: TextField(
+
               onChanged: (text) async {
                 store.setThumbnailExpense(
                   await Regex.doRegex(
@@ -453,6 +455,7 @@ class TrackPage extends HookWidget {
                 fontSize: 20,
                 fontWeight: FontWeight.w400,
                 letterSpacing: 1.6,
+                
               ),
               decoration: InputDecoration(
                   contentPadding:
